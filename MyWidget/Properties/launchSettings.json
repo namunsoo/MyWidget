@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MyWidget (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MyWidget (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
