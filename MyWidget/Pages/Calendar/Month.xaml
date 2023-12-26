@@ -11,6 +11,7 @@
     <Page.Resources>
         <CollectionViewSource x:Name="MonthData" IsSourceGrouped="True" 
                           ItemsPath="Connection"/>
+        <local:ListCount x:Key="ListCount"/>
     </Page.Resources>
 
     <Grid Height="auto">
@@ -99,24 +100,49 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock  Grid.Row="0" Margin="5,0,0,0" Text="{Binding Day}" Foreground="{Binding NumberColor}" FontWeight="Bold"
                         Style="{StaticResource BaseTextBlockStyle}"/>
-                        <TextBlock Grid.Row="1" Margin="5,0,0,0" FontSize="12" Text="{Binding Memo}" Foreground="{Binding FontColor}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
-                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        Style="{StaticResource BodyTextBlockStyle}" />
-                        <TextBox Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" Background="#ffffff" AcceptsReturn="True" FontSize="12"
+                        <TextBlock Grid.Row="1" Margin="5,0,0,0" FontSize="12" Text="{Binding LocalMemo}" Foreground="{Binding FontColor}" 
+                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                        <ListView Grid.Row="2" Margin="5,0,5,0" Loaded="ListView_Loaded" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ItemsSource="{Binding Timetable}" SelectionMode="None" >
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid BorderBrush="#B4D4FF" Background="#80B4D4FF" BorderThickness="1" CornerRadius="4" >
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Summary}" FontSize="12" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Setter Property="MinHeight" Value="1"/>
+                                    <Setter Property="Height" Value="auto"/>
+                                    <Setter Property="Margin" Value="5,2,5,2"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                        </ListView>
+                        <TextBlock Grid.Row="4" Text="{Binding Timetable, Converter={StaticResource ListCount}}" Margin="10,0,0,0" Visibility="Collapsed"></TextBlock>
+                        <TextBox Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" Background="#ffffff" AcceptsReturn="True" FontSize="12"
                         Text="{Binding LocalMemo}" KeyDown="TextBox_KeyDown"/>
-                        <Button Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" Width="30" Height="30" Background="Transparent" Tag="{Binding}" Click="Btn_OpenDetail_Click"
+                        <Button Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" Width="30" Height="30" Background="Transparent" Tag="{Binding}" Click="Btn_OpenDetail_Click"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Padding="0">
                             <FontIcon FontSize="15" Glyph="&#xE8A7;"/>
                         </Button>
-                        <Button Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" Width="30" Height="30" Background="Transparent" Click="Btn_MemoClose_Click"
+                        <Button Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" Width="30" Height="30" Background="Transparent" Click="Btn_MemoClose_Click"
                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="0">
                             <FontIcon FontSize="15" Glyph="&#xE711;"/>
                         </Button>
-                        <Button Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" Width="30" Height="30" Background="Transparent" Tag="{Binding}" Click="Btn_MemoSave_Click"
+                        <Button Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" Width="30" Height="30" Background="Transparent" Tag="{Binding}" Click="Btn_MemoSave_Click"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,2" Padding="0">
                             <FontIcon FontSize="15" Glyph="&#xE792;"/>
                         </Button>

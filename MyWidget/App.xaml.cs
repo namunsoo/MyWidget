@@ -1,4 +1,7 @@
-﻿using Microsoft.UI;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -50,19 +53,28 @@ namespace MyWidget
 		/// <param name="args">Details about the launch request and process.</param>
 		protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
 		{
+
+			#region [| 이미 앱이 실행줄일 경우 프로그램 종료 |]
 			var mainInstance = Microsoft.Windows.AppLifecycle.AppInstance.FindOrRegisterForKey("MyWidget");
 
 			if (!mainInstance.IsCurrent)
 			{
-				// Redirect the activation (and args) to the "main" instance, and exit.
 				var activatedEventArgs =
 					Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs();
 				await mainInstance.RedirectActivationToAsync(activatedEventArgs);
 				System.Diagnostics.Process.GetCurrentProcess().Kill();
 				return;
 			}
+			#endregion
 
+			// 이미 앱이 실행줄일때 같은 앱을 실행할경우 연결할 이벤트
 			Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().Activated += AppActivated;
+
+			Ioc.Default.ConfigureServices
+			(new ServiceCollection()
+				.AddSingleton<IMessenger>(WeakReferenceMessenger.Default)
+				.BuildServiceProvider()
+			);
 
 			m_window = new MainWindow();
 			m_window.ExtendsContentIntoTitleBar = true;
@@ -85,22 +97,12 @@ namespace MyWidget
 			}
 		}
 
+		#region [| 앱이 실행줄일때 이벤트 |]
 		private void AppActivated(object sender, AppActivationArguments e)
 		{
-			IntPtr hWnd = new IntPtr();
-			if (m_window != null)
-			{
-				hWnd = WindowNative.GetWindowHandle(m_window);
-				Win32.ShowWindow(hWnd, (int)Win32.ShowWindowCommands.ShowNormal);
-				Win32.SetForegroundWindow(hWnd);
-			}
-			if (calendar_window != null)
-			{
-				hWnd = WindowNative.GetWindowHandle(calendar_window);
-				Win32.ShowWindow(hWnd, (int)Win32.ShowWindowCommands.ShowNormal);
-				Win32.SetForegroundWindow(hWnd);
-			}
+			Ioc.Default.GetService<IMessenger>().Send(new BringTop());
 		}
+		#endregion
 
 		public static Window m_window { get; set; }
 		public static Window calendar_window { get; set; }

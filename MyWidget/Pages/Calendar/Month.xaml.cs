@@ -10,6 +10,7 @@ using MyWidget.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -697,6 +698,69 @@ namespace MyWidget.Pages.Calendar
 				default:
 					return new SolidColorBrush(Common.Style.GetColor("#FF000f1a"));
 			}
+		}
+
+		private void ListView_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+		{
+			ListView listView = sender as ListView;
+			ScrollViewer scrollViewer = FindVisualChild<ScrollViewer>(listView);
+			if (scrollViewer != null && scrollViewer.ComputedVerticalScrollBarVisibility == Visibility.Visible)
+			{
+				Grid grid = listView.Parent as Grid;
+				grid.Children.OfType<TextBlock>().LastOrDefault().Visibility = Visibility.Visible;
+			}
+		}
+
+		private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+		{
+			for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+			{
+				DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+
+				if (child is T result)
+				{
+					return result;
+				}
+
+				T descendant = FindVisualChild<T>(child);
+
+				if (descendant != null)
+				{
+					return descendant;
+				}
+			}
+
+			return null;
+		}
+
+		private void ListView_Loaded(object sender, RoutedEventArgs e)
+		{
+			ListView listView = sender as ListView;
+			ScrollViewer scrollViewer = FindVisualChild<ScrollViewer>(listView);
+			if (scrollViewer != null && scrollViewer.ComputedVerticalScrollBarVisibility == Visibility.Visible)
+			{
+				Grid grid = listView.Parent as Grid;
+				grid.Children.OfType<TextBlock>().LastOrDefault().Visibility = Visibility.Visible;
+			}
+		}
+	}
+
+	public class ListCount : IValueConverter
+	{
+		public object Convert(object value, Type targetType,
+			object parameter, string language)
+		{
+			if (value is List<CustomTimetableItem> list && list.Count != 0)
+			{
+				return "+" + list.Count;
+			}
+			return null;
+		}
+
+		public object ConvertBack(object value, Type targetType,
+			object parameter, string language)
+		{
+			throw new NotImplementedException();
 		}
 	}
 

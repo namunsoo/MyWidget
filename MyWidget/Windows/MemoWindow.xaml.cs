@@ -17,6 +17,9 @@ using WinRT.Interop;
 using Microsoft.UI.Windowing;
 using Microsoft.UI;
 using WinUIEx;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using MyWidget.Helpers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -28,8 +31,8 @@ namespace MyWidget.Windows
     /// </summary>
     public sealed partial class MemoWindow : Window
     {
-		private AppWindow m_AppWindow;
-		private OverlappedPresenter m_AppWindow_overlapped;
+		private AppWindow _appWindow;
+		private OverlappedPresenter _appWindow_overlapped;
 		private DisplayArea _displayArea;
 		private Point _mouseDownLocation;
 		private Grid _grid;
@@ -37,23 +40,31 @@ namespace MyWidget.Windows
 		{
 			this.InitializeComponent();
 
+			var messenger = Ioc.Default.GetService<IMessenger>();
+
+			messenger.Register<BringTop>(this, (r, m) =>
+			{
+				_appWindow.MoveInZOrderAtTop();
+				this.SetForegroundWindow();
+			});
+
 			var manager = WinUIEx.WindowManager.Get(this);
 			manager.Width = 400;
 			manager.Height = 600;
 
 			IntPtr hWnd = WindowNative.GetWindowHandle(this);
 			WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
-			m_AppWindow = AppWindow.GetFromWindowId(wndId);
-			m_AppWindow_overlapped = (OverlappedPresenter)m_AppWindow.Presenter;
-			if (m_AppWindow is not null)
+			_appWindow = AppWindow.GetFromWindowId(wndId);
+			_appWindow_overlapped = (OverlappedPresenter)_appWindow.Presenter;
+			if (_appWindow is not null)
 			{
 				_displayArea = DisplayArea.GetFromWindowId(wndId, DisplayAreaFallback.Nearest);
 				if (_displayArea is not null)
 				{
-					var position = m_AppWindow.Position;
-					position.X = ((_displayArea.WorkArea.Width - m_AppWindow.Size.Width) / 2);
-					position.Y = ((_displayArea.WorkArea.Height - m_AppWindow.Size.Height) / 2);
-					m_AppWindow.Move(position);
+					var position = _appWindow.Position;
+					position.X = ((_displayArea.WorkArea.Width - _appWindow.Size.Width) / 2);
+					position.Y = ((_displayArea.WorkArea.Height - _appWindow.Size.Height) / 2);
+					_appWindow.Move(position);
 				}
 			}
 			if (Grid_Main.Background is SolidColorBrush sb)
@@ -81,7 +92,7 @@ namespace MyWidget.Windows
 				if (e.GetCurrentPoint(grid).Properties.IsLeftButtonPressed)
 				{
 					POINT mousePosition;
-					var position = m_AppWindow.Position;
+					var position = _appWindow.Position;
 					if (GetCursorPos(out mousePosition))
 					{
 						_mouseDownLocation.X = mousePosition.X - position.X;
@@ -104,10 +115,10 @@ namespace MyWidget.Windows
 					{
 						point_X = mousePosition.X - _mouseDownLocation.X;
 						point_y = mousePosition.Y - _mouseDownLocation.Y;
-						var position = m_AppWindow.Position;
+						var position = _appWindow.Position;
 						position.X = (int)point_X;
 						position.Y = (int)point_y;
-						m_AppWindow.Move(position);
+						_appWindow.Move(position);
 					}
 				}
 			}
@@ -115,42 +126,19 @@ namespace MyWidget.Windows
 		#endregion
 
 		#region [| 윈도우 사이즈 변경 |]
-		private void Grid_WidgetControlMinimize_Tapped(object sender, RoutedEventArgs e)
-		{
-			m_AppWindow_overlapped.Minimize();
-		}
-
-		private void Grid_WidgetControlMaximize_Tapped(object sender, RoutedEventArgs e)
-		{
-			if (m_AppWindow_overlapped.IsMaximizable)
-			{
-				m_AppWindow_overlapped.Restore();
-				m_AppWindow_overlapped.IsMaximizable = false;
-				FI_Maximize.Glyph = "\uE922";
-			}
-			else
-			{
-				m_AppWindow_overlapped.Maximize();
-				m_AppWindow_overlapped.IsMaximizable = true;
-				FI_Maximize.Glyph = "\uE923";
-			}
-		}
-
 		private void Grid_TitleBar_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
 		{
 			if (e.OriginalSource == sender)
 			{
-				if (m_AppWindow_overlapped.IsMaximizable)
+				if (_appWindow_overlapped.IsMaximizable)
 				{
-					m_AppWindow_overlapped.Restore();
-					m_AppWindow_overlapped.IsMaximizable = false;
-					FI_Maximize.Glyph = "\uE922";
+					_appWindow_overlapped.Restore();
+					_appWindow_overlapped.IsMaximizable = false;
 				}
 				else
 				{
-					m_AppWindow_overlapped.Maximize();
-					m_AppWindow_overlapped.IsMaximizable = true;
-					FI_Maximize.Glyph = "\uE923";
+					_appWindow_overlapped.Maximize();
+					_appWindow_overlapped.IsMaximizable = true;
 				}
 			}
 		}
@@ -175,8 +163,21 @@ namespace MyWidget.Windows
 			_grid = sender as Grid;
 			_grid.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 		}
+
+		private void Grid_Colors_PointerEntered(object sender, PointerRoutedEventArgs e)
+		{
+			_grid = sender as Grid;
+			_grid.Background = new SolidColorBrush(Common.Style.GetColorDarkly(((SolidColorBrush)_grid.Background).Color, 0.05f));
+		}
+
+		private void Grid_Colors_PointerExited(object sender, PointerRoutedEventArgs e)
+		{
+			_grid = sender as Grid;
+			_grid.Background = new SolidColorBrush(Common.Style.GetColor(Convert.ToString(_grid.Tag)));
+		}
 		#endregion
 
+		#region [| window focus? 효과 |]
 		private void Window_Activated(object sender, WindowActivatedEventArgs args)
 		{
 			if (this.Show())
@@ -186,9 +187,41 @@ namespace MyWidget.Windows
 				} else
 				{
 					AniCloseSetting.Begin();
+					Grid_ColorOption.Visibility = Visibility.Collapsed;
+					ColorOptionClose.Begin();
 				}
 			}
 		}
+		#endregion
 
+		private void Grid_ColorChange_Tapped(object sender, TappedRoutedEventArgs e)
+		{
+			if (Grid_ColorOption.Visibility == Visibility.Collapsed)
+			{
+				Grid_ColorOption.Visibility = Visibility.Visible;
+				ColorOptionOpen.Begin();
+			} else
+			{
+				ColorOptionClose.Begin();
+				ColorOptionClose.Completed += (_, _) => { Grid_ColorOption.Visibility = Visibility.Collapsed; };
+			}
+		}
+
+		private void Grid_ColorOption_Tapped(object sender, TappedRoutedEventArgs e)
+		{
+			if (e.OriginalSource == sender)
+			{
+				ColorOptionClose.Begin();
+				ColorOptionClose.Completed += (_, _) => { Grid_ColorOption.Visibility = Visibility.Collapsed; };
+			}
+		}
+
+		private void Grid_Color_Tapped(object sender, TappedRoutedEventArgs e)
+		{
+			_grid = sender as Grid;
+
+			Grid_Content.Background = new SolidColorBrush(Common.Style.GetColor(Convert.ToString(_grid.Tag)));
+			Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(Common.Style.GetColor(Convert.ToString(_grid.Tag)), 0.1f));
+		}
 	}
 }

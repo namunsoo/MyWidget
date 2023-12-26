@@ -18,6 +18,10 @@ namespace MyWidget.Common
 		public static Color GetColor(string hex)
 		{
 			hex = hex.Replace("#", string.Empty);
+			if (hex.Length == 6)
+			{
+				hex = "FF" + hex;
+			}
 			byte a = (byte)(Convert.ToUInt32(hex.Substring(0, 2), 16));
 			byte r = (byte)(Convert.ToUInt32(hex.Substring(2, 2), 16));
 			byte g = (byte)(Convert.ToUInt32(hex.Substring(4, 2), 16));
@@ -28,7 +32,7 @@ namespace MyWidget.Common
 		/// <summary>
 		/// 색상 어둡게 변환
 		/// </summary>
-		/// <param name="hex">색상</param>
+		/// <param name="color">색상</param>
 		/// <param name="brightness">밝기 [ex: 0.1f (10%어둡게)]</param>
 		/// <returns></returns>
 		public static Color GetColorDarkly(Color color, float brightness)
@@ -37,6 +41,24 @@ namespace MyWidget.Common
 			float r = (float)color.R * brightness;
 			float g = (float)color.G * brightness;
 			float b = (float)color.B * brightness;
+			return Color.FromArgb(color.A, (byte)r, (byte)g, (byte)b);
+		}
+
+		/// <summary>
+		/// 색상 밝게 변환
+		/// </summary>
+		/// <param name="color">색상</param>
+		/// <param name="brightness">밝기 [ex: 0.1f (10%밝게)]</param>
+		/// <returns></returns>
+		public static Color GetColorBrightly(Color color, float brightness)
+		{
+			int rr = 255 - color.R;
+			int gr = 255 - color.G;
+			int br = 255 - color.B;
+
+			float r = (255 - color.R) * brightness + color.R;
+			float g = (255 - color.G) * brightness + color.G;
+			float b = (255 - color.B) * brightness + color.B;
 			return Color.FromArgb(color.A, (byte)r, (byte)g, (byte)b);
 		}
 

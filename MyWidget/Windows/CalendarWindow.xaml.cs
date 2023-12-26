@@ -18,6 +18,9 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using WinRT.Interop;
 using MyWidget.Helpers;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using WinUIEx;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -29,8 +32,8 @@ namespace MyWidget.Windows
 	/// </summary>
 	public sealed partial class CalendarWindow : Window
 	{
-		private AppWindow m_AppWindow;
-		private OverlappedPresenter m_AppWindow_overlapped;
+		private AppWindow _appWindow;
+		private OverlappedPresenter _appWindow_overlapped;
 		private DisplayArea _displayArea;
 		private Point _mouseDownLocation;
 		private Grid _grid;
@@ -38,11 +41,18 @@ namespace MyWidget.Windows
 		{
 			this.InitializeComponent();
 
+			var messenger = Ioc.Default.GetService<IMessenger>();
+
+			messenger.Register<BringTop>(this, (r, m) =>
+			{
+				_appWindow.MoveInZOrderAtTop();
+			});
+
 			IntPtr hWnd = WindowNative.GetWindowHandle(this);
 			WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
-			m_AppWindow = AppWindow.GetFromWindowId(wndId);
-			m_AppWindow_overlapped = (OverlappedPresenter)m_AppWindow.Presenter;
-			if (m_AppWindow is not null)
+			_appWindow = AppWindow.GetFromWindowId(wndId);
+			_appWindow_overlapped = (OverlappedPresenter)_appWindow.Presenter;
+			if (_appWindow is not null)
 			{
 				_displayArea = DisplayArea.GetFromWindowId(wndId, DisplayAreaFallback.Nearest);
 			}
@@ -76,7 +86,7 @@ namespace MyWidget.Windows
 				using (StreamWriter writer = new StreamWriter("C:\\MyWidget\\CalendarOptions.txt"))
 				{
 					writer.Write("blur_true,#00000000,800,750,");
-					writer.Write(_displayArea == null ? "0,0" : ((_displayArea.WorkArea.Width - m_AppWindow.Size.Width) / 2) + "," + ((_displayArea.WorkArea.Height - m_AppWindow.Size.Height) / 2));
+					writer.Write(_displayArea == null ? "0,0" : ((_displayArea.WorkArea.Width - _appWindow.Size.Width) / 2) + "," + ((_displayArea.WorkArea.Height - _appWindow.Size.Height) / 2));
 				}
 			}
 
@@ -84,12 +94,12 @@ namespace MyWidget.Windows
 			Grid_Main.Background = new SolidColorBrush(Common.Style.GetColor(data[1]));
 			manager.Width = Convert.ToInt32(data[2]);
 			manager.Height = Convert.ToInt32(data[3]);
-			if (m_AppWindow is not null && _displayArea is not null)
+			if (_appWindow is not null && _displayArea is not null)
 			{
-				var position = m_AppWindow.Position;
-				position.X = data.Length == 4 ? ((_displayArea.WorkArea.Width - m_AppWindow.Size.Width) / 2) : Convert.ToInt32(data[4]);
-				position.Y = data.Length == 4 ? ((_displayArea.WorkArea.Height - m_AppWindow.Size.Height) / 2) : Convert.ToInt32(data[5]);
-				m_AppWindow.Move(position);
+				var position = _appWindow.Position;
+				position.X = data.Length == 4 ? ((_displayArea.WorkArea.Width - _appWindow.Size.Width) / 2) : Convert.ToInt32(data[4]);
+				position.Y = data.Length == 4 ? ((_displayArea.WorkArea.Height - _appWindow.Size.Height) / 2) : Convert.ToInt32(data[5]);
+				_appWindow.Move(position);
 			}
 
 			if (Grid_Main.Background is SolidColorBrush sb)
@@ -118,7 +128,7 @@ namespace MyWidget.Windows
 				if (e.GetCurrentPoint(grid).Properties.IsLeftButtonPressed)
 				{
 					POINT mousePosition;
-					var position = m_AppWindow.Position;
+					var position = _appWindow.Position;
 					if (GetCursorPos(out mousePosition))
 					{
 						_mouseDownLocation.X = mousePosition.X - position.X;
@@ -141,10 +151,10 @@ namespace MyWidget.Windows
 					{
 						point_X = mousePosition.X - _mouseDownLocation.X;
 						point_y = mousePosition.Y - _mouseDownLocation.Y;
-						var position = m_AppWindow.Position;
+						var position = _appWindow.Position;
 						position.X = (int)point_X;
 						position.Y = (int)point_y;
-						m_AppWindow.Move(position);
+						_appWindow.Move(position);
 					}
 				}
 			}
@@ -166,8 +176,8 @@ namespace MyWidget.Windows
 						}
 						using (StreamWriter writer = new StreamWriter("C:\\MyCalendarAssets\\myOptions.txt"))
 						{
-							data[4] = Convert.ToString(m_AppWindow.Position.X);
-							data[5] = Convert.ToString(m_AppWindow.Position.Y);
+							data[4] = Convert.ToString(_appWindow.Position.X);
+							data[5] = Convert.ToString(_appWindow.Position.Y);
 							for (int i = 0; i < data.Length; i++)
 							{
 								writer.Write(data[i]);
@@ -186,21 +196,21 @@ namespace MyWidget.Windows
 		#region [| 윈도우 사이즈 변경 |]
 		private void Grid_WidgetControlMinimize_Tapped(object sender, RoutedEventArgs e)
 		{
-			m_AppWindow_overlapped.Minimize();
+			_appWindow_overlapped.Minimize();
 		}
 
 		private void Grid_WidgetControlMaximize_Tapped(object sender, RoutedEventArgs e)
 		{
-			if (m_AppWindow_overlapped.IsMaximizable)
+			if (_appWindow_overlapped.IsMaximizable)
 			{
-				m_AppWindow_overlapped.Restore();
-				m_AppWindow_overlapped.IsMaximizable = false;
+				_appWindow_overlapped.Restore();
+				_appWindow_overlapped.IsMaximizable = false;
 				FI_Maximize.Glyph = "\uE922";
 			}
 			else
 			{
-				m_AppWindow_overlapped.Maximize();
-				m_AppWindow_overlapped.IsMaximizable = true;
+				_appWindow_overlapped.Maximize();
+				_appWindow_overlapped.IsMaximizable = true;
 				FI_Maximize.Glyph = "\uE923";
 			}
 		}
@@ -209,16 +219,16 @@ namespace MyWidget.Windows
 		{
 			if (e.OriginalSource == sender)
 			{
-				if (m_AppWindow_overlapped.IsMaximizable)
+				if (_appWindow_overlapped.IsMaximizable)
 				{
-					m_AppWindow_overlapped.Restore();
-					m_AppWindow_overlapped.IsMaximizable = false;
+					_appWindow_overlapped.Restore();
+					_appWindow_overlapped.IsMaximizable = false;
 					FI_Maximize.Glyph = "\uE922";
 				}
 				else
 				{
-					m_AppWindow_overlapped.Maximize();
-					m_AppWindow_overlapped.IsMaximizable = true;
+					_appWindow_overlapped.Maximize();
+					_appWindow_overlapped.IsMaximizable = true;
 					FI_Maximize.Glyph = "\uE923";
 				}
 			}
@@ -302,8 +312,8 @@ namespace MyWidget.Windows
 			options += CP_BackgroundColor.Color.ToString() + ",";
 			options += NBox_WindowWith.Value + ",";
 			options += NBox_WindowHeight.Value + ",";
-			options += Convert.ToString(m_AppWindow.Position.X) + ",";
-			options += Convert.ToString(m_AppWindow.Position.Y);
+			options += Convert.ToString(_appWindow.Position.X) + ",";
+			options += Convert.ToString(_appWindow.Position.Y);
 			using (StreamWriter writer = new StreamWriter("C:\\MyWidget\\CalendarOptions.txt"))
 			{
 				writer.Write(options);

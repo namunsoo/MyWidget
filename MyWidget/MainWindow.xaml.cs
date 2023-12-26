@@ -24,6 +24,8 @@ using Windows.UI.ViewManagement;
 using Microsoft.UI.Xaml.Hosting;
 using MyWidget.Windows;
 using MyWidget.Helpers;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -35,8 +37,8 @@ namespace MyWidget
 	/// </summary>
 	public sealed partial class MainWindow : Window
 	{
-		private AppWindow m_AppWindow;
-		private OverlappedPresenter m_AppWindow_overlapped;
+		private AppWindow _appWindow;
+		private OverlappedPresenter _appWindow_overlapped;
 		private DisplayArea _displayArea;
 		private Point _mouseDownLocation;
 		private Grid _grid;
@@ -44,23 +46,31 @@ namespace MyWidget
 		{
 			this.InitializeComponent();
 
+			var messenger = Ioc.Default.GetService<IMessenger>();
+
+			messenger.Register<BringTop>(this, (r, m) =>
+			{
+				_appWindow.MoveInZOrderAtTop();
+				this.SetForegroundWindow();
+			});
+
 			var manager = WinUIEx.WindowManager.Get(this);
 			manager.Width = 400;
 			manager.Height = 600;
 
 			IntPtr hWnd = WindowNative.GetWindowHandle(this);
 			WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
-			m_AppWindow = AppWindow.GetFromWindowId(wndId);
-			m_AppWindow_overlapped = (OverlappedPresenter)m_AppWindow.Presenter;
-			if (m_AppWindow is not null)
+			_appWindow = AppWindow.GetFromWindowId(wndId);
+			_appWindow_overlapped = (OverlappedPresenter)_appWindow.Presenter;
+			if (_appWindow is not null)
 			{
 				_displayArea = DisplayArea.GetFromWindowId(wndId, DisplayAreaFallback.Nearest);
 				if (_displayArea is not null)
 				{
-					var position = m_AppWindow.Position;
-					position.X = ((_displayArea.WorkArea.Width - m_AppWindow.Size.Width) / 2);
-					position.Y = ((_displayArea.WorkArea.Height - m_AppWindow.Size.Height) / 2);
-					m_AppWindow.Move(position);
+					var position = _appWindow.Position;
+					position.X = ((_displayArea.WorkArea.Width - _appWindow.Size.Width) / 2);
+					position.Y = ((_displayArea.WorkArea.Height - _appWindow.Size.Height) / 2);
+					_appWindow.Move(position);
 				}
 			}
 			if(Grid_Main.Background is SolidColorBrush sb)
@@ -90,7 +100,7 @@ namespace MyWidget
 				if (e.GetCurrentPoint(grid).Properties.IsLeftButtonPressed)
 				{
 					POINT mousePosition;
-					var position = m_AppWindow.Position;
+					var position = _appWindow.Position;
 					if (GetCursorPos(out mousePosition))
 					{
 						_mouseDownLocation.X = mousePosition.X - position.X;
@@ -113,10 +123,10 @@ namespace MyWidget
 					{
 						point_X = mousePosition.X - _mouseDownLocation.X;
 						point_y = mousePosition.Y - _mouseDownLocation.Y;
-						var position = m_AppWindow.Position;
+						var position = _appWindow.Position;
 						position.X = (int)point_X;
 						position.Y = (int)point_y;
-						m_AppWindow.Move(position);
+						_appWindow.Move(position);
 					}
 				}
 			}
@@ -126,20 +136,20 @@ namespace MyWidget
 		#region [| 윈도우 사이즈 변경 |]
 		private void Grid_WidgetControlMinimize_Tapped(object sender, RoutedEventArgs e)
 		{
-			m_AppWindow_overlapped.Minimize();
+			_appWindow_overlapped.Minimize();
 		}
 
 		private void Grid_WidgetControlMaximize_Tapped(object sender, RoutedEventArgs e)
 		{
-			if (m_AppWindow_overlapped.IsMaximizable)
+			if (_appWindow_overlapped.IsMaximizable)
 			{
-				m_AppWindow_overlapped.Restore();
-				m_AppWindow_overlapped.IsMaximizable = false;
+				_appWindow_overlapped.Restore();
+				_appWindow_overlapped.IsMaximizable = false;
 				FI_Maximize.Glyph = "\uE922";
 			} else
 			{
-				m_AppWindow_overlapped.Maximize();
-				m_AppWindow_overlapped.IsMaximizable = true;
+				_appWindow_overlapped.Maximize();
+				_appWindow_overlapped.IsMaximizable = true;
 				FI_Maximize.Glyph = "\uE923";
 			}
 		}
@@ -148,16 +158,16 @@ namespace MyWidget
 		{
 			if (e.OriginalSource == sender)
 			{
-				if (m_AppWindow_overlapped.IsMaximizable)
+				if (_appWindow_overlapped.IsMaximizable)
 				{
-					m_AppWindow_overlapped.Restore();
-					m_AppWindow_overlapped.IsMaximizable = false;
+					_appWindow_overlapped.Restore();
+					_appWindow_overlapped.IsMaximizable = false;
 					FI_Maximize.Glyph = "\uE922";
 				}
 				else
 				{
-					m_AppWindow_overlapped.Maximize();
-					m_AppWindow_overlapped.IsMaximizable = true;
+					_appWindow_overlapped.Maximize();
+					_appWindow_overlapped.IsMaximizable = true;
 					FI_Maximize.Glyph = "\uE923";
 				}
 			}
@@ -167,7 +177,7 @@ namespace MyWidget
 		#region [| 윈도우 닫기 |]
 		private void Grid_WidgetControlClose_Tapped(object sender, RoutedEventArgs e)
 		{
-			App.m_window.Close();
+			this.Close();
 		}
 		#endregion
 
@@ -245,7 +255,7 @@ namespace MyWidget
             {
 				IntPtr hWnd = WindowNative.GetWindowHandle(App.calendar_window);
 				Win32.ShowWindow(hWnd, (int)Win32.ShowWindowCommands.ShowNormal);
-				Win32.SetForegroundWindow(hWnd);
+				Win32.SetForegroundWindow(hWnd); 
             }
 		}
 		#endregion

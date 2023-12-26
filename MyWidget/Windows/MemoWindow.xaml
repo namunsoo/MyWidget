@@ -29,7 +29,7 @@
                 </DoubleAnimationUsingKeyFrames>
             </Storyboard>
         </Grid.Resources>
-        <Frame x:Name="ContentFrame" Background="#FFFFFF"/>
+        <Frame x:Name="Grid_Content" Background="#FFFFFF"/>
         <Grid x:Name="Grid_TitleBar" Height="0" Margin="0" Padding="0" Background="#FFFFFFFF" DoubleTapped="Grid_TitleBar_DoubleTapped" VerticalAlignment="Top"
             PointerPressed="Grid_TitleBar_PointerPressed" PointerMoved="Grid_TitleBar_PointerMoved">
             <Grid.ColumnDefinitions>
@@ -47,21 +47,63 @@
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xe710;" FontSize="13"/>
             </Grid>
-            <Grid Grid.Column="2" Margin="0" 
+            <Grid Grid.Column="3" Margin="0" 
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
-                <FontIcon Foreground="#656565"  Glyph="&#xe713;" FontSize="13"/>
+                <FontIcon Foreground="#656565" Glyph="&#xe712;" FontSize="15"/>
             </Grid>
-            <Grid Grid.Column="3" Margin="0" Tapped="Grid_WidgetControlMinimize_Tapped"
+            <Grid Grid.Column="4" Margin="0" Tapped="Grid_ColorChange_Tapped"
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
-                <FontIcon Foreground="#656565"  Glyph="&#xE921;" FontSize="10"/>
-            </Grid>
-            <Grid Grid.Column="4" Margin="0" Tapped="Grid_WidgetControlMaximize_Tapped"
-                PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
-                <FontIcon x:Name="FI_Maximize" Foreground="#656565"  Glyph="&#xE922;" FontSize="10"/>
+                <FontIcon Foreground="#656565" Glyph="&#xe790;" FontSize="15"/>
             </Grid>
             <Grid Grid.Column="5" Margin="0" Tapped="Grid_WidgetControlClose_Tapped" 
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xE8BB;" FontSize="10"/>
+            </Grid>
+        </Grid>
+        <Grid x:Name="Grid_ColorOption" Margin="0" Padding="0" Background="Transparent" Visibility="Collapsed" Tapped="Grid_ColorOption_Tapped">
+            <Grid.Resources>
+                <Storyboard x:Name="ColorOptionOpen">
+                    <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
+                        Storyboard.TargetProperty="(FrameworkElement.Height)" 
+                        Storyboard.TargetName="Grid_Colors">
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="70"/>
+                    </DoubleAnimationUsingKeyFrames>
+                </Storyboard>
+                <Storyboard x:Name="ColorOptionClose">
+                    <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
+                        Storyboard.TargetProperty="(FrameworkElement.Height)" 
+                        Storyboard.TargetName="Grid_Colors">
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+                    </DoubleAnimationUsingKeyFrames>
+                </Storyboard>
+            </Grid.Resources>
+            <Grid x:Name="Grid_Colors" Height="0" VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="70"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Column="0" Margin="0" Background="#ffe66e" Tag="#ffe66e" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="1" Margin="0" Background="#a1ef9b" Tag="#a1ef9b" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="2" Margin="0" Background="#ffafdf" Tag="#ffafdf" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="3" Margin="0" Background="#d7afff" Tag="#d7afff" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="4" Margin="0" Background="#9edfff" Tag="#9edfff" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="5" Margin="0" Background="#e0e0e0" Tag="#e0e0e0" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="6" Margin="0" Background="#FFFFFF" Tag="#FFFFFF" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
             </Grid>
         </Grid>
     </Grid>
