@@ -52,10 +52,6 @@ namespace MyWidget.Common
 		/// <returns></returns>
 		public static Color GetColorBrightly(Color color, float brightness)
 		{
-			int rr = 255 - color.R;
-			int gr = 255 - color.G;
-			int br = 255 - color.B;
-
 			float r = (255 - color.R) * brightness + color.R;
 			float g = (255 - color.G) * brightness + color.G;
 			float b = (255 - color.B) * brightness + color.B;

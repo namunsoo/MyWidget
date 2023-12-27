@@ -10,7 +10,7 @@
     Activated="Window_Activated"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
-        <winuiex:TransparentTintBackdrop/>
+        <winuiex:TransparentTintBackdrop />
     </Window.SystemBackdrop>
     <Grid x:Name="Grid_Main" Margin="0" Padding="0" Background="#FFFFFFFF">
         <Grid.Resources>
@@ -20,16 +20,35 @@
                             Storyboard.TargetName="Grid_TitleBar">
                     <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="32"/>
                 </DoubleAnimationUsingKeyFrames>
+                <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
+                            Storyboard.TargetProperty="(FrameworkElement.Height)" 
+                            Storyboard.TargetName="Grid_FotterBar">
+                    <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="40"/>
+                </DoubleAnimationUsingKeyFrames>
             </Storyboard>
             <Storyboard x:Name="AniCloseSetting">
                 <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
-                Storyboard.TargetProperty="(FrameworkElement.Height)" 
-                Storyboard.TargetName="Grid_TitleBar">
+                            Storyboard.TargetProperty="(FrameworkElement.Height)" 
+                            Storyboard.TargetName="Grid_TitleBar">
+                    <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+                </DoubleAnimationUsingKeyFrames>
+                <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
+                            Storyboard.TargetProperty="(FrameworkElement.Height)" 
+                            Storyboard.TargetName="Grid_FotterBar">
                     <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
                 </DoubleAnimationUsingKeyFrames>
             </Storyboard>
         </Grid.Resources>
-        <Frame x:Name="Grid_Content" Background="#FFFFFF"/>
+        <Grid x:Name="Grid_Content" Background="#FFFFFF">
+            <RichEditBox x:Name="REB_Memo" Margin="0,32,0,40" Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
+                         ContextFlyout="{x:Null}" FlyoutBase.AttachedFlyout="{x:Null}" KeyUp="REB_Memo_KeyUp">
+                <RichEditBox.Resources>
+                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+                    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" Opacity="0"/>
+                </RichEditBox.Resources>
+            </RichEditBox>
+        </Grid>
         <Grid x:Name="Grid_TitleBar" Height="0" Margin="0" Padding="0" Background="#FFFFFFFF" DoubleTapped="Grid_TitleBar_DoubleTapped" VerticalAlignment="Top"
             PointerPressed="Grid_TitleBar_PointerPressed" PointerMoved="Grid_TitleBar_PointerMoved">
             <Grid.ColumnDefinitions>
@@ -38,38 +57,96 @@
                 <ColumnDefinition Width="32"/>
                 <ColumnDefinition Width="32"/>
                 <ColumnDefinition Width="32"/>
-                <ColumnDefinition Width="32"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
             </Grid.RowDefinitions>
-            <Grid x:Name="Grid_OpenNewMemo" Grid.Column="0" Margin="0"
+            <Grid x:Name="Grid_OpenNewMemo" Grid.Column="0" Margin="0" 
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xe710;" FontSize="13"/>
             </Grid>
-            <Grid Grid.Column="3" Margin="0" 
+            <Grid Grid.Column="2" Margin="0" Tapped="Grid_OpenMainWindow_Tapped"
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565" Glyph="&#xe712;" FontSize="15"/>
             </Grid>
-            <Grid Grid.Column="4" Margin="0" Tapped="Grid_ColorChange_Tapped"
+            <Grid Grid.Column="3" Margin="0" Tapped="Grid_ColorChange_Tapped"
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565" Glyph="&#xe790;" FontSize="15"/>
             </Grid>
-            <Grid Grid.Column="5" Margin="0" Tapped="Grid_WidgetControlClose_Tapped" 
+            <Grid Grid.Column="4" Margin="0" Tapped="Grid_WidgetControlClose_Tapped" 
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xE8BB;" FontSize="10"/>
             </Grid>
         </Grid>
+        <Grid x:Name="Grid_FotterBar" Height="0" Margin="0" Padding="0" Background="Transparent" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="40"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Grid.Resources>
+                <Flyout x:Key="FontSizeFlyout" Placement="Top" >
+                    <Flyout.FlyoutPresenterStyle>
+                        <Style TargetType="FlyoutPresenter">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="CornerRadius" Value="6"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                    </Flyout.FlyoutPresenterStyle>
+                    <NumberBox x:Name="NBox_FontSize" Value="14" Minimum="8" ValueChanged="NBox_FontSize_ValueChanged"
+                               SpinButtonPlacementMode="Inline" SmallChange="1"/>
+                </Flyout>
+            </Grid.Resources>
+            <Grid x:Name="Grid_Bold" Grid.Column="0" Margin="5" Tag="#00000000" Tapped="Grid_Bold_Tapped"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#656565"  Glyph="&#xE8DD;" FontSize="18"/>
+            </Grid>
+            <Grid x:Name="Grid_Italic" Grid.Column="1" Margin="5" Tag="#00000000" Tapped="Grid_Italic_Tapped"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#656565" Glyph="&#xE8DB;" FontSize="18"/>
+            </Grid>
+            <Grid x:Name="Grid_Underline" Grid.Column="2" Margin="5" Tag="#00000000" Tapped="Grid_Underline_Tapped"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#656565" Glyph="&#xE8DC;" FontSize="18"/>
+            </Grid>
+            <Grid x:Name="Grid_Strikethrough" Grid.Column="3" Margin="5" Tag="#00000000" Tapped="Grid_Strikethrough_Tapped"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#656565" Glyph="&#xEDE0;" FontSize="18"/>
+            </Grid>
+            <Grid x:Name="Grid_BulletedList" Grid.Column="4" Margin="5" Tag="#00000000" Tapped="Grid_BulletedList_Tapped"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#656565" Glyph="&#xE8FD;" FontSize="18"/>
+            </Grid>
+            <Grid x:Name="Grid_FontSize" Grid.Column="5" Margin="5" Tag="#00000000" Tapped="Grid_FontSize_Tapped"
+                  FlyoutBase.AttachedFlyout="{StaticResource FontSizeFlyout}"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#656565" Glyph="&#xE8E9;" FontSize="18"/>
+            </Grid>
+            <Grid x:Name="Grid_DeleteMemo" Grid.Column="7" Margin="5" Tag="#00000000" Tapped="Grid_DeleteMemo_Tapped"
+                  PointerEntered="Grid_Fotter_PointerEntered" PointerExited="Grid_Fotter_PointerExited">
+                <FontIcon Foreground="#c50500"  Glyph="&#xE74D;" FontSize="18"/>
+            </Grid>
+        </Grid>
         <Grid x:Name="Grid_ColorOption" Margin="0" Padding="0" Background="Transparent" Visibility="Collapsed" Tapped="Grid_ColorOption_Tapped">
             <Grid.Resources>
-                <Storyboard x:Name="ColorOptionOpen">
+                <Storyboard x:Name="AniOpenColorOption">
                     <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
                         Storyboard.TargetProperty="(FrameworkElement.Height)" 
                         Storyboard.TargetName="Grid_Colors">
-                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="70"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="50"/>
                     </DoubleAnimationUsingKeyFrames>
                 </Storyboard>
-                <Storyboard x:Name="ColorOptionClose">
+                <Storyboard x:Name="AniCloseColorOption">
                     <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
                         Storyboard.TargetProperty="(FrameworkElement.Height)" 
                         Storyboard.TargetName="Grid_Colors">
@@ -86,9 +163,10 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="70"/>
+                    <RowDefinition Height="50"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Column="0" Margin="0" Background="#ffe66e" Tag="#ffe66e" Tapped="Grid_Color_Tapped"
                       PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
@@ -100,9 +178,11 @@
                       PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
                 <Grid Grid.Column="4" Margin="0" Background="#9edfff" Tag="#9edfff" Tapped="Grid_Color_Tapped"
                       PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
-                <Grid Grid.Column="5" Margin="0" Background="#e0e0e0" Tag="#e0e0e0" Tapped="Grid_Color_Tapped"
+                <Grid Grid.Column="5" Margin="0" Background="#FFFFFF" Tag="#FFFFFF" Tapped="Grid_Color_Tapped"
                       PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
-                <Grid Grid.Column="6" Margin="0" Background="#FFFFFF" Tag="#FFFFFF" Tapped="Grid_Color_Tapped"
+                <Grid Grid.Column="6" Margin="0" Background="#e0e0e0" Tag="#e0e0e0" Tapped="Grid_Color_Tapped"
+                      PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
+                <Grid Grid.Column="7" Margin="0" Background="#767676" Tag="#767676" Tapped="Grid_Color_Tapped"
                       PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
             </Grid>
         </Grid>
