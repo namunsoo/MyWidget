@@ -72,7 +72,7 @@ namespace MyWidget.Windows
 		private void GetMyOptions()
 		{
 			var manager = WinUIEx.WindowManager.Get(this);
-			string[] data = { "blur_true", "#00000000", "800", "800", };
+			string[] data = { "blur_true", "#00000000", "800", "800" };
 			FileInfo fi = new FileInfo("C:\\MyWidget\\CalendarOptions.txt");
 			if (fi.Exists)
 			{
@@ -238,7 +238,8 @@ namespace MyWidget.Windows
 		#region [| 윈도우 닫기 |]
 		private void Grid_WidgetControlClose_Tapped(object sender, RoutedEventArgs e)
 		{
-			App.calendar_window.Close();
+			Common.WidgetOptions.SetCalendar(false);
+			this.Close();
 		}
 		#endregion
 
@@ -253,6 +254,41 @@ namespace MyWidget.Windows
 		{
 			_grid = sender as Grid;
 			_grid.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+		}
+		#endregion
+
+		#region [| MainWindow 열기 |]
+		private void Grid_OpenMainWindow_Tapped(object sender, TappedRoutedEventArgs e)
+		{
+			if (App.m_window == null || App.m_window.AppWindow == null)
+			{
+				App.m_window = new MainWindow();
+				App.m_window.ExtendsContentIntoTitleBar = true;
+				App.m_window.Activate();
+
+				// the bug test code follows
+				var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(App.m_window);
+
+				// Retrieve the WindowId that corresponds to hWnd.
+				Microsoft.UI.WindowId windowId =
+					Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+
+				// Lastly, retrieve the AppWindow for the current (XAML) WinUI 3 window.
+				var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+
+				if (appWindow.Presenter is OverlappedPresenter p)
+				{
+					p.SetBorderAndTitleBar(false, false);
+					p.IsResizable = false;
+				}
+				Common.WidgetOptions.SetMainWindow(true);
+			}
+			else if (App.m_window.AppWindow != null)
+			{
+				IntPtr hWnd = WindowNative.GetWindowHandle(App.m_window);
+				Win32.ShowWindow(hWnd, (int)Win32.ShowWindowCommands.ShowNormal);
+				Win32.SetForegroundWindow(hWnd);
+			}
 		}
 		#endregion
 

@@ -27,20 +27,25 @@
                 <ColumnDefinition Width="40"/>
                 <ColumnDefinition Width="40"/>
                 <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="40"/>
             </Grid.ColumnDefinitions>
-            <Grid Grid.Column="1" Margin="0" Tapped="Grid_CalendarOptions_Tapped"
+            <Grid Grid.Column="1" Margin="0" Tapped="Grid_OpenMainWindow_Tapped" 
+                  PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
+                <FontIcon Foreground="#656565"  Glyph="&#xe712;" FontSize="15"/>
+            </Grid>
+            <Grid Grid.Column="2" Margin="0" Tapped="Grid_CalendarOptions_Tapped"
               PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xe713;" FontSize="15"/>
             </Grid>
-            <Grid Grid.Column="2" Margin="0" Tapped="Grid_WidgetControlMinimize_Tapped"
+            <Grid Grid.Column="3" Margin="0" Tapped="Grid_WidgetControlMinimize_Tapped"
               PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xE921;" FontSize="12"/>
             </Grid>
-            <Grid Grid.Column="3" Margin="0" Tapped="Grid_WidgetControlMaximize_Tapped"
+            <Grid Grid.Column="4" Margin="0" Tapped="Grid_WidgetControlMaximize_Tapped"
               PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon x:Name="FI_Maximize" Foreground="#656565"  Glyph="&#xE922;" FontSize="12"/>
             </Grid>
-            <Grid Grid.Column="4" Margin="0" Tapped="Grid_WidgetControlClose_Tapped" 
+            <Grid Grid.Column="5" Margin="0" Tapped="Grid_WidgetControlClose_Tapped" 
               PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xE8BB;" FontSize="12"/>
             </Grid>

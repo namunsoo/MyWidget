@@ -26,6 +26,8 @@ using MyWidget.Windows;
 using MyWidget.Helpers;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using MyWidget.Pages.Calendar;
+using MyWidget.Pages.Main;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -73,7 +75,10 @@ namespace MyWidget
 					_appWindow.Move(position);
 				}
 			}
-			if(Grid_Main.Background is SolidColorBrush sb)
+
+			ContentFrame.Navigate(typeof(DefaultMain));
+
+			if (Grid_Main.Background is SolidColorBrush sb)
 			{
 				Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
 			}
@@ -177,6 +182,7 @@ namespace MyWidget
 		#region [| 윈도우 닫기 |]
 		private void Grid_WidgetControlClose_Tapped(object sender, RoutedEventArgs e)
 		{
+			Common.WidgetOptions.SetMainWindow(false);
 			this.Close();
 		}
 		#endregion
@@ -250,6 +256,7 @@ namespace MyWidget
 					p.SetBorderAndTitleBar(false, false);
 					p.IsResizable = false;
 				}
+				Common.WidgetOptions.SetCalendar(true);
 			}
             else if (App.calendar_window.AppWindow != null)
             {
@@ -263,7 +270,7 @@ namespace MyWidget
 		#region [| 메모 위젯 추가 |]
 		private void Grid_NewMemo_Tapped(object sender, TappedRoutedEventArgs e)
 		{
-			MemoWindow memoWindow = new MemoWindow();
+			MemoWindow memoWindow = new MemoWindow(default(Guid));
 			App.memo_window.Add(memoWindow);
 			memoWindow.ExtendsContentIntoTitleBar = true;
 			memoWindow.Activate();

@@ -12,7 +12,7 @@
     <Window.SystemBackdrop>
         <winuiex:TransparentTintBackdrop />
     </Window.SystemBackdrop>
-    <Grid x:Name="Grid_Main" Margin="0" Padding="0" Background="#FFFFFFFF">
+    <Grid x:Name="Grid_Main" Margin="0" Padding="0">
         <Grid.Resources>
             <Storyboard x:Name="AniOpenSetting">
                 <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
@@ -41,7 +41,7 @@
         </Grid.Resources>
         <Grid x:Name="Grid_Content" Background="#FFFFFF">
             <RichEditBox x:Name="REB_Memo" Margin="0,32,0,40" Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
-                         ContextFlyout="{x:Null}" FlyoutBase.AttachedFlyout="{x:Null}" KeyUp="REB_Memo_KeyUp">
+                         ContextFlyout="{x:Null}" FlyoutBase.AttachedFlyout="{x:Null}" KeyUp="REB_Memo_KeyUp" PlaceholderText="메모를 작성하세요...">
                 <RichEditBox.Resources>
                     <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
                     <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
@@ -61,7 +61,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
             </Grid.RowDefinitions>
-            <Grid x:Name="Grid_OpenNewMemo" Grid.Column="0" Margin="0" 
+            <Grid x:Name="Grid_OpenNewMemo" Grid.Column="0" Margin="0" Tapped="Grid_OpenNewMemo_Tapped"
                 PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xe710;" FontSize="13"/>
             </Grid>
@@ -186,5 +186,12 @@
                       PointerEntered="Grid_Colors_PointerEntered" PointerExited="Grid_Colors_PointerExited"/>
             </Grid>
         </Grid>
+        <StackPanel x:Name="SP_Dialog" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <ContentDialog>
+                <Grid Height="200" Width="200">
+
+                </Grid>
+            </ContentDialog>
+        </StackPanel>
     </Grid>
 </Window>

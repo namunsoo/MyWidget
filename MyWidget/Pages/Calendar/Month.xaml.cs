@@ -110,7 +110,7 @@ namespace MyWidget.Pages.Calendar
 				};
 
 				// 따로 오픈할 경로를 지정해주지 않으면 프로퍼티 오류 발생
-				errorDataDialog.XamlRoot = this.MyPanel.XamlRoot;
+				errorDataDialog.XamlRoot = this.SP_Dialog.XamlRoot;
 
 				ContentDialogResult result = await errorDataDialog.ShowAsync();
 			}
@@ -232,7 +232,7 @@ namespace MyWidget.Pages.Calendar
 				};
 
 				// 따로 오픈할 경로를 지정해주지 않으면 프로퍼티 오류 발생
-				errorDataDialog.XamlRoot = this.MyPanel.XamlRoot;
+				errorDataDialog.XamlRoot = this.SP_Dialog.XamlRoot;
 
 				ContentDialogResult result = await errorDataDialog.ShowAsync();
 			}
@@ -375,7 +375,7 @@ namespace MyWidget.Pages.Calendar
 					CloseButtonText = "취소"
 				};
 
-				dialog.XamlRoot = this.MyPanel.XamlRoot;
+				dialog.XamlRoot = this.SP_Dialog.XamlRoot;
 
 				ContentDialogResult result = await dialog.ShowAsync();
 
@@ -420,7 +420,7 @@ namespace MyWidget.Pages.Calendar
 				};
 
 				// 따로 오픈할 경로를 지정해주지 않으면 프로퍼티 오류 발생
-				errorDataDialog.XamlRoot = this.MyPanel.XamlRoot;
+				errorDataDialog.XamlRoot = this.SP_Dialog.XamlRoot;
 
 				ContentDialogResult result = await errorDataDialog.ShowAsync();
 			}
@@ -473,7 +473,7 @@ namespace MyWidget.Pages.Calendar
 				};
 
 				// 따로 오픈할 경로를 지정해주지 않으면 프로퍼티 오류 발생
-				errorDataDialog.XamlRoot = this.MyPanel.XamlRoot;
+				errorDataDialog.XamlRoot = this.SP_Dialog.XamlRoot;
 
 				ContentDialogResult result = await errorDataDialog.ShowAsync();
 			}
@@ -499,7 +499,7 @@ namespace MyWidget.Pages.Calendar
 				CloseButtonText = "취소"
 			};
 
-			dialog.XamlRoot = this.MyPanel.XamlRoot;
+			dialog.XamlRoot = this.SP_Dialog.XamlRoot;
 
 			ContentDialogResult result = await dialog.ShowAsync();
 

@@ -50,7 +50,7 @@
                 <FontIcon Foreground="#656565"  Glyph="&#xE8BB;" FontSize="12"/>
             </Grid>
         </Grid>
-        <Frame x:Name="ContentFrame" Background="#FFFFFF" Grid.Column="0" Grid.Row="1"/>
+        <Frame x:Name="ContentFrame" Background="#FFFFFFFF" Grid.Column="0" Grid.Row="1"/>
         <Grid x:Name="Grid_NewWidgets" Grid.Column="0" Grid.Row="1" Margin="0" Padding="0" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Grid.Resources>
                 <Storyboard x:Name="SB_OpenNewCalendar" >
