@@ -50,7 +50,7 @@
             </RichEditBox>
         </Grid>
         <Grid x:Name="Grid_TitleBar" Height="0" Margin="0" Padding="0" Background="#FFFFFFFF" DoubleTapped="Grid_TitleBar_DoubleTapped" VerticalAlignment="Top"
-            PointerPressed="Grid_TitleBar_PointerPressed" PointerMoved="Grid_TitleBar_PointerMoved">
+            PointerPressed="Grid_TitleBar_PointerPressed">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="32"/>
                 <ColumnDefinition Width="*"/>

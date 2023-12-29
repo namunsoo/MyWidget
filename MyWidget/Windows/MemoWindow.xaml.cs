@@ -25,7 +25,6 @@ using Windows.System;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
 using Windows.Storage;
-using MyWidget.Pages.Calendar;
 using Microsoft.UI.Xaml.Shapes;
 using Windows.Storage.Streams;
 
@@ -136,39 +135,16 @@ namespace MyWidget.Windows
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool GetCursorPos(out POINT lpPoint);
 
-		private bool isMovedFirst = true;
-		private DispatcherTimer movedTimer;
-		private void Grid_TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
+		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		static extern bool GetAsyncKeyState(int vKey);
+		const int VK_LBUTTON = 0x01;
+		private bool IsLeftMouseButtonPressed()
 		{
-			if (sender is Grid grid && e.OriginalSource == sender)
-			{
-				if (e.GetCurrentPoint(grid).Properties.IsLeftButtonPressed)
-				{
-					POINT mousePosition;
-					var position = _appWindow.Position;
-					if (GetCursorPos(out mousePosition))
-					{
-						_mouseDownLocation.X = mousePosition.X - position.X;
-						_mouseDownLocation.Y = mousePosition.Y - position.Y;
-					}
-
-					if (isMovedFirst)
-					{
-						movedTimer = new DispatcherTimer();
-						movedTimer.Interval = TimeSpan.FromSeconds(3);
-						movedTimer.Tick += RenameAfterMove;
-						isMovedFirst = false;
-					}
-					else
-					{
-						movedTimer.Stop();
-						movedTimer.Start();
-					}
-				}
-			}
+			return GetAsyncKeyState(VK_LBUTTON) & 0x8000 != 0;
 		}
 
-		private void Grid_TitleBar_PointerMoved(object sender, PointerRoutedEventArgs e)
+		private void Grid_TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
 		{
 			if (sender is Grid grid && e.OriginalSource == sender)
 			{
@@ -177,24 +153,30 @@ namespace MyWidget.Windows
 					POINT mousePosition;
 					double point_X = 0;
 					double point_y = 0;
-					if (GetCursorPos(out mousePosition) && _displayArea is not null)
+					var position = _appWindow.Position;
+					if (GetCursorPos(out mousePosition))
 					{
+						_mouseDownLocation.X = mousePosition.X - position.X;
+						_mouseDownLocation.Y = mousePosition.Y - position.Y;
+					}
+
+					while (IsLeftMouseButtonPressed())
+					{
+						GetCursorPos(out mousePosition);
 						point_X = mousePosition.X - _mouseDownLocation.X;
 						point_y = mousePosition.Y - _mouseDownLocation.Y;
-						var position = _appWindow.Position;
 						position.X = (int)point_X;
 						position.Y = (int)point_y;
 						_appWindow.Move(position);
 					}
-					movedTimer.Stop();
-					movedTimer.Start();
+
+					RenameAfterMove();
 				}
 			}
 		}
 
-		private async void RenameAfterMove(object sender, object e)
+		private async void RenameAfterMove()
 		{
-			movedTimer.Stop();
 			try
 			{
 				if (!id.Equals(default(Guid)))
@@ -227,10 +209,6 @@ namespace MyWidget.Windows
 
 			}
 			catch { }
-			finally
-			{
-				isMovedFirst = true;
-			}
 		}
 		#endregion
 

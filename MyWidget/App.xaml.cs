@@ -108,32 +108,6 @@ namespace MyWidget
 				}
 			}
 
-			#region [| Calendar 열기 |]
-			if (data[1].Equals("Calendar_Open"))
-			{
-				calendar_window = new CalendarWindow();
-				calendar_window.ExtendsContentIntoTitleBar = true;
-				calendar_window.Activate();
-
-				// the bug test code follows
-				var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(calendar_window);
-
-				// Retrieve the WindowId that corresponds to hWnd.
-				Microsoft.UI.WindowId windowId =
-					Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
-
-				// Lastly, retrieve the AppWindow for the current (XAML) WinUI 3 window.
-				var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-
-				if (appWindow.Presenter is OverlappedPresenter p)
-				{
-					p.SetBorderAndTitleBar(false, false);
-					p.IsResizable = false;
-				}
-				OtherWindow = true;
-			}
-			#endregion
-
 			#region [| PostItMemo 열기 |]
 			di = new DirectoryInfo("C:\\MyWidget\\PostItMemo");
 			if (di.Exists)
@@ -191,7 +165,7 @@ namespace MyWidget
 
 				if (appWindow.Presenter is OverlappedPresenter p)
 				{
-					p.SetBorderAndTitleBar(false, false);
+					p.SetBorderAndTitleBar(true, false);
 					p.IsResizable = false;
 				}
 			}
@@ -208,7 +182,6 @@ namespace MyWidget
 		#endregion
 
 		public static Window m_window { get; set; }
-		public static Window calendar_window { get; set; }
 
 		public static List<Window> memo_window = new List<Window>();
 	}

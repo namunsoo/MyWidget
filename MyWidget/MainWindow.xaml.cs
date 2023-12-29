@@ -26,8 +26,8 @@ using MyWidget.Windows;
 using MyWidget.Helpers;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using MyWidget.Pages.Calendar;
-using MyWidget.Pages.Main;
+using System.Threading;
+using Windows.Devices.Input;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -76,14 +76,10 @@ namespace MyWidget
 				}
 			}
 
-			ContentFrame.Navigate(typeof(DefaultMain));
-
 			if (Grid_Main.Background is SolidColorBrush sb)
 			{
 				Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
 			}
-			SB_CloseNewCalendar.Begin();
-			SB_CloseNewMemo.Begin();
 		}
 
 		#region [| 윈도우 이동 |]
@@ -98,24 +94,16 @@ namespace MyWidget
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool GetCursorPos(out POINT lpPoint);
 
-		private void Grid_TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
+		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		static extern bool GetAsyncKeyState(int vKey);
+		const int VK_LBUTTON = 0x01;
+		private bool IsLeftMouseButtonPressed()
 		{
-			if (sender is Grid grid && e.OriginalSource == sender)
-			{
-				if (e.GetCurrentPoint(grid).Properties.IsLeftButtonPressed)
-				{
-					POINT mousePosition;
-					var position = _appWindow.Position;
-					if (GetCursorPos(out mousePosition))
-					{
-						_mouseDownLocation.X = mousePosition.X - position.X;
-						_mouseDownLocation.Y = mousePosition.Y - position.Y;
-					}
-				}
-			}
+			return GetAsyncKeyState(VK_LBUTTON) & 0x8000 != 0;
 		}
 
-		private void Grid_TitleBar_PointerMoved(object sender, PointerRoutedEventArgs e)
+		private void Grid_TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
 		{
 			if (sender is Grid grid && e.OriginalSource == sender)
 			{
@@ -124,11 +112,18 @@ namespace MyWidget
 					POINT mousePosition;
 					double point_X = 0;
 					double point_y = 0;
-					if (GetCursorPos(out mousePosition) && _displayArea is not null)
+					var position = _appWindow.Position;
+					if (GetCursorPos(out mousePosition))
 					{
+						_mouseDownLocation.X = mousePosition.X - position.X;
+						_mouseDownLocation.Y = mousePosition.Y - position.Y;
+					}
+
+					while (IsLeftMouseButtonPressed())
+					{
+						GetCursorPos(out mousePosition);
 						point_X = mousePosition.X - _mouseDownLocation.X;
 						point_y = mousePosition.Y - _mouseDownLocation.Y;
-						var position = _appWindow.Position;
 						position.X = (int)point_X;
 						position.Y = (int)point_y;
 						_appWindow.Move(position);
@@ -177,6 +172,55 @@ namespace MyWidget
 				}
 			}
 		}
+
+		private void Window_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+		{
+			if (this.Show())
+			{
+				if (args.WindowActivationState == WindowActivationState.CodeActivated)
+				{
+					POINT mousePosition;
+					GetCursorPos(out mousePosition);
+
+					// Define a threshold for the side detection (e.g., 10 pixels)
+					double threshold = 10;
+
+					// Check if the mouse is on the left side
+					if (mousePosition.X < threshold)
+					{
+						// Mouse is on the left side
+						// Do something...
+					}
+
+					// Check if the mouse is on the right side
+					if (mousePosition.X > this.ActualWidth - threshold)
+					{
+						// Mouse is on the right side
+						// Do something...
+					}
+
+					// Check if the mouse is on the top side
+					if (mousePosition.Y < threshold)
+					{
+						// Mouse is on the top side
+						// Do something...
+					}
+
+					// Check if the mouse is on the bottom side
+					if (mousePosition.Y > this.ActualHeight - threshold)
+					{
+						// Mouse is on the bottom side
+						// Do something...
+					}
+				}
+				else
+				{
+					//AniCloseSetting.Begin();
+					//Grid_ColorOption.Visibility = Visibility.Collapsed;
+					//AniCloseColorOption.Begin();
+				}
+			}
+		}
 		#endregion
 
 		#region [| 윈도우 닫기 |]
@@ -198,72 +242,6 @@ namespace MyWidget
 		{
 			_grid = sender as Grid;
 			_grid.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
-		}
-
-		private void GridAdd_PointerEntered(object sender, PointerRoutedEventArgs e)
-		{
-			_grid = sender as Grid;
-			_grid.Background = new SolidColorBrush(Common.Style.GetColorDarkly(((SolidColorBrush)ContentFrame.Background).Color, 0.05f));
-		}
-
-		private void GridAdd_PointerExited(object sender, PointerRoutedEventArgs e)
-		{
-			_grid = sender as Grid;
-			_grid.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
-		}
-		#endregion
-
-		#region [| 새로운 위젯 Open animation |]
-		private static bool isOpenNewWidgets = false;
-		private void Grid_OpenNewWidgets_Tapped(object sender, TappedRoutedEventArgs e)
-		{
-			if (!isOpenNewWidgets)
-			{
-				Grid_NewWidgets.Visibility = Visibility.Visible;
-				SB_OpenNewCalendar.Begin();
-				SB_OpenNewCalendar.Completed += (_, _) => { SB_OpenNewMemo.Begin(); };
-				isOpenNewWidgets = true;
-			} else
-			{
-				SB_CloseNewMemo.Begin();
-				SB_CloseNewMemo.Completed += (_, _) => { SB_CloseNewCalendar.Begin(); };
-				SB_CloseNewCalendar.Completed += (_, _) => { Grid_NewWidgets.Visibility = Visibility.Collapsed; };
-				isOpenNewWidgets = false;
-			}
-		}
-		#endregion
-
-		#region [| 캘린더 위젯 추가 |]
-		private void Grid_NewCalendar_Tapped(object sender, TappedRoutedEventArgs e)
-		{
-			if (App.calendar_window == null || App.calendar_window.AppWindow == null)
-			{
-				App.calendar_window = new CalendarWindow();
-				App.calendar_window.ExtendsContentIntoTitleBar = true;
-				App.calendar_window.Activate();
-				// the bug test code follows
-				var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(App.calendar_window);
-
-				// Retrieve the WindowId that corresponds to hWnd.
-				Microsoft.UI.WindowId windowId =
-					Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
-
-				// Lastly, retrieve the AppWindow for the current (XAML) WinUI 3 window.
-				var appWindow = AppWindow.GetFromWindowId(windowId);
-
-				if (appWindow.Presenter is OverlappedPresenter p)
-				{
-					p.SetBorderAndTitleBar(false, false);
-					p.IsResizable = false;
-				}
-				Common.WidgetOptions.SetCalendar(true);
-			}
-            else if (App.calendar_window.AppWindow != null)
-            {
-				IntPtr hWnd = WindowNative.GetWindowHandle(App.calendar_window);
-				Win32.ShowWindow(hWnd, (int)Win32.ShowWindowCommands.ShowNormal);
-				Win32.SetForegroundWindow(hWnd); 
-            }
 		}
 		#endregion
 

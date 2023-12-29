@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:winuiex="using:WinUIEx"
+    Activated="Window_Activated"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <winuiex:TransparentTintBackdrop/>
@@ -20,7 +21,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid x:Name="Grid_TitleBar" Grid.Column="0" Grid.Row="0" Margin="0" Padding="0" Background="#FFFFFFFF" DoubleTapped="Grid_TitleBar_DoubleTapped"
-              PointerPressed="Grid_TitleBar_PointerPressed" PointerMoved="Grid_TitleBar_PointerMoved">
+              PointerPressed="Grid_TitleBar_PointerPressed">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="40"/>
                 <ColumnDefinition Width="*"/>
@@ -29,7 +30,7 @@
                 <ColumnDefinition Width="40"/>
                 <ColumnDefinition Width="40"/>
             </Grid.ColumnDefinitions>
-            <Grid x:Name="Grid_OpenNewWidgets" Grid.Column="0" Margin="0" Tapped="Grid_OpenNewWidgets_Tapped"
+            <Grid x:Name="Grid_NewMemo" Grid.Column="0" Margin="0" Tapped="Grid_NewMemo_Tapped"
                   PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
                 <FontIcon Foreground="#656565"  Glyph="&#xe710;" FontSize="15"/>
             </Grid>
@@ -51,29 +52,5 @@
             </Grid>
         </Grid>
         <Frame x:Name="ContentFrame" Background="#FFFFFFFF" Grid.Column="0" Grid.Row="1"/>
-        <Grid x:Name="Grid_NewWidgets" Grid.Column="0" Grid.Row="1" Margin="0" Padding="0" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <Grid.Resources>
-                <Storyboard x:Name="SB_OpenNewCalendar" >
-                    <FadeInThemeAnimation Storyboard.TargetName="Grid_NewCalendar"/>
-                </Storyboard>
-                <Storyboard x:Name="SB_OpenNewMemo" >
-                    <FadeInThemeAnimation Storyboard.TargetName="Grid_NewMemo" />
-                </Storyboard>
-                <Storyboard x:Name="SB_CloseNewCalendar" >
-                    <FadeOutThemeAnimation Storyboard.TargetName="Grid_NewCalendar"/>
-                </Storyboard>
-                <Storyboard x:Name="SB_CloseNewMemo" >
-                    <FadeOutThemeAnimation Storyboard.TargetName="Grid_NewMemo" />
-                </Storyboard>
-            </Grid.Resources>
-            <Grid x:Name="Grid_NewCalendar" Margin="0" Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Top"
-                  PointerEntered="GridAdd_PointerEntered" PointerExited="GridAdd_PointerExited" Tapped="Grid_NewCalendar_Tapped">
-                <FontIcon Foreground="#656565"  Glyph="&#xe787;" FontSize="15"/>
-            </Grid>
-            <Grid x:Name="Grid_NewMemo" Margin="0,40,0,0" Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Top"
-                  PointerEntered="GridAdd_PointerEntered" PointerExited="GridAdd_PointerExited" Tapped="Grid_NewMemo_Tapped">
-                <FontIcon Foreground="#656565"  Glyph="&#xe70b;" FontSize="15"/>
-            </Grid>
-        </Grid>
     </Grid>
 </Window>
