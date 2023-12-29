@@ -80,6 +80,46 @@ namespace MyWidget
 			{
 				Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
 			}
+
+			new Thread(() =>
+			{
+				while (true)
+				{
+					POINT mousePosition;
+					GetCursorPos(out mousePosition);
+
+					if (mousePosition.X < _appWindow.Position.X - 10)
+					{
+						Window.Current.CoreWindow.PointerCursor = new CoreCursor(CoreCursorType.SizeWestEast, 1);
+						// Mouse is on the left side
+						// Do something...
+					}
+
+					// Check if the mouse is on the right side
+					if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width + 10)
+					{
+						// Mouse is on the right side
+						// Do something...
+					}
+
+					// Check if the mouse is on the top side
+					if (mousePosition.Y < _appWindow.Position.Y - 10)
+					{
+						Window.Current.CoreWindow.PointerCursor = new CoreCursor(CoreCursorType.SizeWestEast, 1);
+						// Mouse is on the top side
+						// Do something...
+					}
+
+					// Check if the mouse is on the bottom side
+					if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height + 10)
+					{
+						// Mouse is on the bottom side
+						// Do something...
+					}
+
+					Thread.Sleep(100);
+				}
+			}).Start();
 		}
 
 		#region [| 윈도우 이동 |]
@@ -172,55 +212,6 @@ namespace MyWidget
 				}
 			}
 		}
-
-		private void Window_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
-		{
-			if (this.Show())
-			{
-				if (args.WindowActivationState == WindowActivationState.CodeActivated)
-				{
-					POINT mousePosition;
-					GetCursorPos(out mousePosition);
-
-					// Define a threshold for the side detection (e.g., 10 pixels)
-					double threshold = 10;
-
-					// Check if the mouse is on the left side
-					if (mousePosition.X < threshold)
-					{
-						// Mouse is on the left side
-						// Do something...
-					}
-
-					// Check if the mouse is on the right side
-					if (mousePosition.X > this.ActualWidth - threshold)
-					{
-						// Mouse is on the right side
-						// Do something...
-					}
-
-					// Check if the mouse is on the top side
-					if (mousePosition.Y < threshold)
-					{
-						// Mouse is on the top side
-						// Do something...
-					}
-
-					// Check if the mouse is on the bottom side
-					if (mousePosition.Y > this.ActualHeight - threshold)
-					{
-						// Mouse is on the bottom side
-						// Do something...
-					}
-				}
-				else
-				{
-					//AniCloseSetting.Begin();
-					//Grid_ColorOption.Visibility = Visibility.Collapsed;
-					//AniCloseColorOption.Begin();
-				}
-			}
-		}
 		#endregion
 
 		#region [| 윈도우 닫기 |]
@@ -269,5 +260,10 @@ namespace MyWidget
 			}
 		}
 		#endregion
+
+		private void Grid_Main_PointerMoved(object sender, PointerRoutedEventArgs e)
+		{
+
+		}
 	}
 }
