@@ -6,12 +6,12 @@
     xmlns:local="using:MyWidget"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:winuiex="using:WinUIEx"
+    xmlns:winuiex="using:WinUIEx" 
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <winuiex:TransparentTintBackdrop/>
     </Window.SystemBackdrop>
-    <Grid x:Name="Grid_Main" Margin="0" Padding="0" Background="#FFFFFFFF" PointerMoved="Grid_Main_PointerMoved">
+    <local:GridMain x:Name="Grid_Main" Margin="0" Padding="7" Background="Transparent" PointerMoved="Grid_Main_PointerMoved" PointerPressed="Grid_Main_PointerPressed">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -51,5 +51,5 @@
             </Grid>
         </Grid>
         <Frame x:Name="ContentFrame" Background="#FFFFFFFF" Grid.Column="0" Grid.Row="1"/>
-    </Grid>
+    </local:GridMain>
 </Window>

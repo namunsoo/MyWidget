@@ -60,9 +60,11 @@ namespace MyWidget.Windows
 				this.SetForegroundWindow();
 			});
 
-			var manager = WinUIEx.WindowManager.Get(this);
-			manager.Width = 300;
-			manager.Height = 300;
+			using (var manager = WinUIEx.WindowManager.Get(this))
+			{
+				manager.Width = 300;
+				manager.Height = 300;
+			}
 
 			IntPtr hWnd = WindowNative.GetWindowHandle(this);
 			WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);

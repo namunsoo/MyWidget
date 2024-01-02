@@ -28,6 +28,10 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Threading;
 using Windows.Devices.Input;
+using Microsoft.UI.Input;
+using System.Reflection;
+using Windows.UI.WindowManagement;
+using Windows.Graphics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -39,7 +43,7 @@ namespace MyWidget
 	/// </summary>
 	public sealed partial class MainWindow : Window
 	{
-		private AppWindow _appWindow;
+		private Microsoft.UI.Windowing.AppWindow _appWindow;
 		private OverlappedPresenter _appWindow_overlapped;
 		private DisplayArea _displayArea;
 		private Point _mouseDownLocation;
@@ -56,14 +60,19 @@ namespace MyWidget
 				this.SetForegroundWindow();
 			});
 
-			var manager = WinUIEx.WindowManager.Get(this);
-			manager.Width = 400;
-			manager.Height = 600;
+			using (var manager = WinUIEx.WindowManager.Get(this))
+			{
+				manager.Width = 414;
+				manager.Height = 614;
+				manager.MinWidth = 414;
+				manager.MinHeight = 614;
+			}
 
 			IntPtr hWnd = WindowNative.GetWindowHandle(this);
 			WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
-			_appWindow = AppWindow.GetFromWindowId(wndId);
+			_appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(wndId);
 			_appWindow_overlapped = (OverlappedPresenter)_appWindow.Presenter;
+			_appWindow_overlapped.IsMaximizable = false;
 			if (_appWindow is not null)
 			{
 				_displayArea = DisplayArea.GetFromWindowId(wndId, DisplayAreaFallback.Nearest);
@@ -76,50 +85,50 @@ namespace MyWidget
 				}
 			}
 
-			if (Grid_Main.Background is SolidColorBrush sb)
+			if (ContentFrame.Background is SolidColorBrush sb)
 			{
 				Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
 			}
 
-			new Thread(() =>
-			{
-				while (true)
-				{
-					POINT mousePosition;
-					GetCursorPos(out mousePosition);
+			//new Thread(() =>
+			//{
+			//	while (true)
+			//	{
+			//		POINT mousePosition;
+			//		GetCursorPos(out mousePosition);
 
-					if (mousePosition.X < _appWindow.Position.X - 10)
-					{
-						Window.Current.CoreWindow.PointerCursor = new CoreCursor(CoreCursorType.SizeWestEast, 1);
-						// Mouse is on the left side
-						// Do something...
-					}
+			//		if (mousePosition.X < _appWindow.Position.X - 10)
+			//		{
+			//			Cursor.Current = Cursors.Hand;
+			//			// Mouse is on the left side
+			//			// Do something...
+			//		}
 
-					// Check if the mouse is on the right side
-					if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width + 10)
-					{
-						// Mouse is on the right side
-						// Do something...
-					}
+			//		// Check if the mouse is on the right side
+			//		if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width + 10)
+			//		{
+			//			// Mouse is on the right side
+			//			// Do something...
+			//		}
 
-					// Check if the mouse is on the top side
-					if (mousePosition.Y < _appWindow.Position.Y - 10)
-					{
-						Window.Current.CoreWindow.PointerCursor = new CoreCursor(CoreCursorType.SizeWestEast, 1);
-						// Mouse is on the top side
-						// Do something...
-					}
+			//		// Check if the mouse is on the top side
+			//		if (mousePosition.Y < _appWindow.Position.Y - 10)
+			//		{
+			//			Window.Current.CoreWindow.PointerCursor = new CoreCursor(CoreCursorType.SizeWestEast, 1);
+			//			// Mouse is on the top side
+			//			// Do something...
+			//		}
 
-					// Check if the mouse is on the bottom side
-					if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height + 10)
-					{
-						// Mouse is on the bottom side
-						// Do something...
-					}
+			//		// Check if the mouse is on the bottom side
+			//		if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height + 10)
+			//		{
+			//			// Mouse is on the bottom side
+			//			// Do something...
+			//		}
 
-					Thread.Sleep(100);
-				}
-			}).Start();
+			//		Thread.Sleep(100);
+			//	}
+			//}).Start();
 		}
 
 		#region [| 윈도우 이동 |]
@@ -183,11 +192,13 @@ namespace MyWidget
 		{
 			if (_appWindow_overlapped.IsMaximizable)
 			{
+				Grid_Main.Padding = new Thickness(7);
 				_appWindow_overlapped.Restore();
 				_appWindow_overlapped.IsMaximizable = false;
 				FI_Maximize.Glyph = "\uE922";
 			} else
 			{
+				Grid_Main.Padding = new Thickness(0);
 				_appWindow_overlapped.Maximize();
 				_appWindow_overlapped.IsMaximizable = true;
 				FI_Maximize.Glyph = "\uE923";
@@ -200,12 +211,14 @@ namespace MyWidget
 			{
 				if (_appWindow_overlapped.IsMaximizable)
 				{
+					Grid_Main.Padding = new Thickness(7);
 					_appWindow_overlapped.Restore();
 					_appWindow_overlapped.IsMaximizable = false;
 					FI_Maximize.Glyph = "\uE922";
 				}
 				else
 				{
+					Grid_Main.Padding = new Thickness(0);
 					_appWindow_overlapped.Maximize();
 					_appWindow_overlapped.IsMaximizable = true;
 					FI_Maximize.Glyph = "\uE923";
@@ -251,7 +264,7 @@ namespace MyWidget
 				Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
 
 			// Lastly, retrieve the AppWindow for the current (XAML) WinUI 3 window.
-			var appWindow = AppWindow.GetFromWindowId(windowId);
+			var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
 
 			if (appWindow.Presenter is OverlappedPresenter p)
 			{
@@ -261,9 +274,226 @@ namespace MyWidget
 		}
 		#endregion
 
+		//const int SPI_SETCURSORS = 0x0057;
+		//const int IDC_HAND = 32649;
+		//const int IDC_ARROW = 32512;
+
+		//[DllImport("user32.dll", SetLastError = true)]
+		//static extern bool SystemParametersInfo(int uiAction, int uiParam, IntPtr pvParam, int fWinIni);
+
+		//[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		//static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
+
+		//public InputCursor ProtectedCursor { get; private set; }
+
+		//private void Grid_Main_PointerEntered(object sender, PointerRoutedEventArgs e)
+		//{
+		//	IntPtr handCursor = LoadCursor(IntPtr.Zero, IDC_HAND);
+		//	// Set the cursor system-wide
+		//	SystemParametersInfo(SPI_SETCURSORS, 0, handCursor, 0);
+
+		//	// Do your other operations here
+
+		//	// Change the cursor back to the default cursor if needed
+		//	//SystemParametersInfo(SPI_SETCURSORS, 0, IntPtr.Zero, 0);
+		//}
+
+		//public void ChangeCursor(InputCursor cursor)
+		//{
+		//	this.ProtectedCursor = cursor;
+		//}
+
 		private void Grid_Main_PointerMoved(object sender, PointerRoutedEventArgs e)
 		{
+			if (!_appWindow_overlapped.IsMaximizable)
+			{
+				GridMain gridMain = sender as GridMain;
+				POINT mousePosition;
+				GetCursorPos(out mousePosition);
 
+				if (mousePosition.X < _appWindow.Position.X + 7)
+				{
+					if (mousePosition.Y < _appWindow.Position.Y + 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast));
+					}
+					else if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height - 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest));
+					}
+					else
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast));
+					}
+				}
+				else if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width - 7)
+				{
+					if (mousePosition.Y < _appWindow.Position.Y + 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest));
+					}
+					else if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height - 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast));
+					}
+					else
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast));
+					}
+				}
+				else if (mousePosition.Y < _appWindow.Position.Y + 7)
+				{
+					if (mousePosition.X < _appWindow.Position.X + 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast));
+					}
+					else if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width - 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest));
+					}
+					else
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth));
+					}
+				}
+				else if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height - 7)
+				{
+					if (mousePosition.X < _appWindow.Position.X + 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest));
+					}
+					else if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width - 14)
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast));
+					}
+					else
+					{
+						gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth));
+					}
+				}
+				else
+				{
+					gridMain.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
+				}
+			}
+
+		}
+
+		private async void Grid_Main_PointerPressed(object sender, PointerRoutedEventArgs e)
+		{
+			if (sender is GridMain gridMain && e.OriginalSource == sender)
+			{
+				if (e.GetCurrentPoint(gridMain).Properties.IsLeftButtonPressed)
+				{
+					int windowWidth, windowHeight;
+					using (var manager = WinUIEx.WindowManager.Get(this))
+					{
+						windowWidth = (int)manager.Width;
+						windowHeight = (int)manager.Height;
+
+					}
+
+					var position = _appWindow.Position;
+					Point pressed = e.GetCurrentPoint(gridMain).Position;
+					int padding_x = windowWidth - (int)pressed.X;
+					int padding_y = windowHeight - (int)pressed.Y;
+					int width, height;
+					POINT mousePosition;
+					while (IsLeftMouseButtonPressed())
+					{
+						GetCursorPos(out mousePosition);
+						width = mousePosition.X - position.X + padding_x;
+						height = mousePosition.Y - position.Y + padding_y;
+						await Task.Run(() => {
+							_appWindow.MoveAndResize(new RectInt32(position.X, position.Y, width, height));
+						});
+					}
+					_appWindow_overlapped = (OverlappedPresenter)_appWindow.Presenter;
+				}
+			}
+		}
+
+		private InputSystemCursor GetCursorShape(POINT mousePosition)
+		{
+			if (mousePosition.X < _appWindow.Position.X + 7)
+			{
+				if (mousePosition.Y < _appWindow.Position.Y + 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast);
+				}
+				else if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height - 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest);
+				}
+				else
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+				}
+			}
+			else if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width - 7)
+			{
+				if (mousePosition.Y < _appWindow.Position.Y + 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest);
+				}
+				else if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height - 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast);
+				}
+				else
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+				}
+			}
+			else if (mousePosition.Y < _appWindow.Position.Y + 7)
+			{
+				if (mousePosition.X < _appWindow.Position.X + 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast);
+				}
+				else if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width - 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest);
+				}
+				else
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth);
+				}
+			}
+			else if (mousePosition.Y > _appWindow.Position.Y + _appWindow.Size.Height - 7)
+			{
+				if (mousePosition.X < _appWindow.Position.X + 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNortheastSouthwest);
+				}
+				else if (mousePosition.X > _appWindow.Position.X + _appWindow.Size.Width - 14)
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNorthwestSoutheast);
+				}
+				else
+				{
+					return InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth);
+				}
+			}
+			else
+			{
+				return InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+			}
+		}
+	}
+	public class GridMain : Grid
+	{
+		public GridMain()
+		{
+		}
+		public void ChangeCursor(InputCursor cursor)
+		{
+			this.ProtectedCursor = cursor;
+		}
+
+		public InputCursor GetCursor()
+		{
+			return this.ProtectedCursor;
 		}
 	}
 }
