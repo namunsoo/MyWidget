@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace MyWidget.Helpers
 {
-	public class BringTop{ }
+	public class BringTopMessage{ }
 }

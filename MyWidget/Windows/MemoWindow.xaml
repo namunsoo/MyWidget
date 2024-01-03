@@ -12,7 +12,7 @@
     <Window.SystemBackdrop>
         <winuiex:TransparentTintBackdrop />
     </Window.SystemBackdrop>
-    <Grid x:Name="Grid_Main" Margin="0" Padding="0">
+    <Grid x:Name="Grid_Main" Margin="0" Padding="0" BorderBrush="#707070" BorderThickness="1" >
         <Grid.Resources>
             <Storyboard x:Name="AniOpenSetting">
                 <DoubleAnimationUsingKeyFrames EnableDependentAnimation="True" 
@@ -187,11 +187,6 @@
             </Grid>
         </Grid>
         <StackPanel x:Name="SP_Dialog" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <ContentDialog>
-                <Grid Height="200" Width="200">
-
-                </Grid>
-            </ContentDialog>
         </StackPanel>
     </Grid>
 </Window>

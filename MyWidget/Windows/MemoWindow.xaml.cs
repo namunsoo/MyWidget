@@ -54,7 +54,7 @@ namespace MyWidget.Windows
 
 			var messenger = Ioc.Default.GetService<IMessenger>();
 
-			messenger.Register<BringTop>(this, (r, m) =>
+			messenger.Register<BringTopMessage>(this, (r, m) =>
 			{
 				_appWindow.MoveInZOrderAtTop();
 				this.SetForegroundWindow();

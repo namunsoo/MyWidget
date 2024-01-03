@@ -12,6 +12,9 @@
         <winuiex:TransparentTintBackdrop/>
     </Window.SystemBackdrop>
     <local:GridMain x:Name="Grid_Main" Margin="0" Padding="7" Background="Transparent" PointerMoved="Grid_Main_PointerMoved" PointerPressed="Grid_Main_PointerPressed">
+        <Grid.Resources>
+            <CollectionViewSource x:Name="MyMemoData" ItemsPath="Connection"/>
+        </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -50,6 +53,41 @@
                 <FontIcon Foreground="#656565"  Glyph="&#xE8BB;" FontSize="12"/>
             </Grid>
         </Grid>
-        <Frame x:Name="ContentFrame" Background="#FFFFFFFF" Grid.Column="0" Grid.Row="1"/>
+        <Grid x:Name="Grid_Content" Background="#FFFFFFFF" Grid.Column="0" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Background="Aqua" Margin="20"></Grid>
+            <ScrollView Grid.Row="1">
+                <StackPanel Orientation="Vertical">
+                    <StackPanel.Resources>
+                        <DataTemplate x:Key="MemoTemplate">
+                            <Grid Background="Bisque" MinHeight="50" MaxHeight="150" Margin="20,10" CornerRadius="10">
+                                <Grid Width="30" Height="30" BorderBrush="AliceBlue" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                    <FontIcon Foreground="#656565"  Glyph="&#xe712;" FontSize="18"/>
+                                </Grid>
+                                <Grid Width="auto" Height="30" Margin="0,0,10,0" BorderBrush="AliceBlue" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                    <TextBlock TextWrapping="Wrap" FontFamily="DOCK11" TextAlignment="Center" Foreground="#656565"
+                                   VerticalAlignment="Center" Padding="0"  Text="2024-01-03"/>
+                                </Grid>
+                                <RichEditBox x:Name="REB_Memo" Margin="0,30,10,0" Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
+                                         IsReadOnly="True" PlaceholderText="메모를 작성하세요...">
+                                    <RichEditBox.Resources>
+                                        <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                                        <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+                                        <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" Opacity="0"/>
+                                    </RichEditBox.Resources>
+                                </RichEditBox>
+                            </Grid>
+                        </DataTemplate>
+                    </StackPanel.Resources>
+                    <ItemsRepeater ItemTemplate="{StaticResource MemoTemplate}"/>
+                </StackPanel>
+            </ScrollView>
+        </Grid>
     </local:GridMain>
 </Window>

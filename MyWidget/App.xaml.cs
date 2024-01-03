@@ -91,7 +91,7 @@ namespace MyWidget
 				di.Create();
 			}
 
-			string[] data = { "MainWindow_Open", "Calendar_Close" };
+			string[] data = { "MainWindow_Open" };
 			FileInfo fi = new FileInfo("C:\\MyWidget\\MainOptions.txt");
 			if (fi.Exists)
 			{
@@ -104,7 +104,7 @@ namespace MyWidget
 			{
 				using (StreamWriter writer = new StreamWriter("C:\\MyWidget\\MainOptions.txt"))
 				{
-					writer.Write("MainWindow_Open,Calendar_Close");
+					writer.Write("MainWindow_Open");
 				}
 			}
 
@@ -136,7 +136,7 @@ namespace MyWidget
 
 						if (appWindow.Presenter is OverlappedPresenter p)
 						{
-							p.SetBorderAndTitleBar(false, false);
+							p.SetBorderAndTitleBar(true, false);
 							p.IsResizable = false;
 						}
 						OtherWindow = true;
@@ -177,7 +177,7 @@ namespace MyWidget
 		private void AppActivated(object sender, AppActivationArguments e)
 		{
 			// 실행중인 모든 윈도우 위로 호출
-			Ioc.Default.GetService<IMessenger>().Send(new BringTop());
+			Ioc.Default.GetService<IMessenger>().Send(new BringTopMessage());
 		}
 		#endregion
 
