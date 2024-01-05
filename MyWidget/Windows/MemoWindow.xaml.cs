@@ -354,7 +354,13 @@ namespace MyWidget.Windows
 			string folderName = "PostItMemo";
 			DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
 			FileInfo[] fileInfos = null;
-			do
+
+            if (di.Exists == false)
+            {
+                di.Create();
+            }
+
+            do
 			{
 				newId = Guid.NewGuid();
 				fileInfos = di.GetFiles("*" + newId + ".rtf");

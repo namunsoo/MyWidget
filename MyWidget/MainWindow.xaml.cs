@@ -218,13 +218,15 @@ namespace MyWidget
 			memoRichEditBox.BorderBrush = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.BorderThickness = new Thickness(0);
 			memoRichEditBox.IsReadOnly = true;
-			memoRichEditBox.IsRightTapEnabled = true;
+			memoRichEditBox.IsRightTapEnabled = false;
 			memoRichEditBox.PlaceholderText = "메모를 작성하세요...";
 			memoRichEditBox.Resources["TextControlBackgroundPointerOver"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.Resources["TextControlBackgroundFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.Resources["TextControlBorderBrushFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+            memoRichEditBox.GettingFocus += MemoRichEditBox_GettingFocus;
 
-			gridSetting.Children.Add(settingIcon);
+
+            gridSetting.Children.Add(settingIcon);
 			gridCreateDate.Children.Add(updateDate);
 
 			gridItemMain.Children.Add(gridSetting);
@@ -234,10 +236,18 @@ namespace MyWidget
 			//SP_MemoList.Children.Add(gridItemMain);
 			SP_MemoList.Children.Insert(0, gridItemMain);
 		}
-		#endregion
+        #endregion
 
-		#region [| 메모 클릭시 앞으로 가져오기 |]
-		private void GridItemMain_Tapped(object sender, TappedRoutedEventArgs e)
+        #region [| 메모 클릭시 메모장 앞으로 가져오기 |]
+        private void MemoRichEditBox_GettingFocus(UIElement sender, GettingFocusEventArgs args)
+        {
+            RichEditBox richEditBox = sender as RichEditBox;
+			Grid memo = richEditBox.Parent as Grid;
+            string memoId = Convert.ToString(memo.Name);
+            App.memo_windows.Find(m => memoId.Equals(Convert.ToString(m.id))).BringWindowTop();
+        }
+
+        private void GridItemMain_Tapped(object sender, TappedRoutedEventArgs e)
 		{
 			Grid memo = sender as Grid;
 			string memoId = Convert.ToString(memo.Name);
@@ -259,7 +269,8 @@ namespace MyWidget
 			if (!backgroundColor.Equals(string.Empty))
 			{
 				targetMemo.Background = new SolidColorBrush(Common.Style.GetColor(backgroundColor));
-			}
+				targetMemo.Tag = backgroundColor;
+            }
 		}
 		#endregion
 
@@ -547,7 +558,12 @@ namespace MyWidget
 			string folderName = "PostItMemo";
 			DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
 			FileInfo[] fileInfos = null;
-			do
+            if (di.Exists == false)
+            {
+                di.Create();
+            }
+
+            do
 			{
 				newId = Guid.NewGuid();
 				fileInfos = di.GetFiles("*" + newId + ".rtf");

@@ -15,7 +15,13 @@ namespace MyWidget.Common
 		/// <param name="isOpen"></param>
 		public static void SetMainWindow(bool isOpen)
 		{
-			FileInfo fi = new FileInfo("C:\\MyWidget\\MainOptions.txt");
+            DirectoryInfo di = new DirectoryInfo("C:\\MyWidget");
+            if (di.Exists == false)
+            {
+                di.Create();
+            }
+
+            FileInfo fi = new FileInfo("C:\\MyWidget\\MainOptions.txt");
 			if (fi.Exists)
 			{
 				string data = string.Empty;
