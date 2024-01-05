@@ -38,7 +38,7 @@ namespace MyWidget.Windows
     /// </summary>
     public sealed partial class MemoWindow : Window
     {
-		public Guid id { get; set; }
+		public Guid id { get; private set; }
 		private AppWindow _appWindow;
 		private OverlappedPresenter _appWindow_overlapped;
 		private DisplayArea _displayArea;
@@ -46,18 +46,15 @@ namespace MyWidget.Windows
 		private Grid _grid;
 		public MemoWindow(Guid memoId)
 		{
-			if (!memoId.Equals(default(Guid)))
-			{
-				id = memoId;
-			}
 			this.InitializeComponent();
+
+			id = memoId;
 
 			var messenger = Ioc.Default.GetService<IMessenger>();
 
 			messenger.Register<BringTopMessage>(this, (r, m) =>
 			{
-				_appWindow.MoveInZOrderAtTop();
-				this.SetForegroundWindow();
+				BringWindowTop();
 			});
 
 			using (var manager = WinUIEx.WindowManager.Get(this))
@@ -75,44 +72,38 @@ namespace MyWidget.Windows
 				_displayArea = DisplayArea.GetFromWindowId(wndId, DisplayAreaFallback.Nearest);
 			}
 
-			GetMyOptions();
+			GetMyOptionsAndData();
 		}
 		#region [| 기본 설정 |]
-		private async void GetMyOptions()
+		private async void GetMyOptionsAndData()
 		{
 			bool isFileExist = false;
 			int x = 0;
 			int y = 0;
-			if (!id.Equals(default(Guid)))
+			string path = "C:\\MyWidget\\PostItMemo";
+			DirectoryInfo di = new DirectoryInfo(path);
+			if (di.Exists)
 			{
-				string path = "C:\\MyWidget\\PostItMemo";
-				DirectoryInfo di = new DirectoryInfo(path);
-				if (di.Exists)
+				FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+				if (fileInfos.Length > 0)
 				{
-					FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
-					if (fileInfos.Length > 0)
-					{
-						string[] data = fileInfos[0].Name.Split(',');
-						Int32.TryParse(data[0], out x);
-						Int32.TryParse(data[1], out y);
-						Grid_Content.Background = new SolidColorBrush(Common.Style.GetColor(data[2]));
-						Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColor(data[3]));
+					string[] data = fileInfos[0].Name.Split(',');
+					Int32.TryParse(data[0], out x);
+					Int32.TryParse(data[1], out y);
+					Grid_Content.Background = new SolidColorBrush(Common.Style.GetColor(data[2]));
+					Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColor(data[3]));
 
-						StorageFile file = await StorageFile.GetFileFromPathAsync(fileInfos[0].FullName);
-						using (IRandomAccessStream randAccStream = await file.OpenAsync(FileAccessMode.Read))
-						{
-							// Load the file into the Document property of the RichEditBox.
-							REB_Memo.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
-						}
-						isFileExist = true;
+					StorageFile file = await StorageFile.GetFileFromPathAsync(fileInfos[0].FullName);
+					using (IRandomAccessStream randAccStream = await file.OpenAsync(FileAccessMode.Read))
+					{
+						// Load the file into the Document property of the RichEditBox.
+						REB_Memo.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
 					}
+					isFileExist = true;
 				}
 			} else
 			{
-				if (Grid_Content.Background is SolidColorBrush sb)
-				{
-					Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
-				}
+				di.Create();
 			}
 
 			if (_displayArea is not null)
@@ -121,7 +112,27 @@ namespace MyWidget.Windows
 				position.X = isFileExist ? x : ((_displayArea.WorkArea.Width - _appWindow.Size.Width) / 2);
 				position.Y = isFileExist ? y : ((_displayArea.WorkArea.Height - _appWindow.Size.Height) / 2);
 				_appWindow.Move(position);
+				if (!isFileExist)
+				{
+					if (Grid_Content.Background is SolidColorBrush sb)
+					{
+						Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
+					}
+					StorageFolder postItMemoFolder = await StorageFolder.GetFolderFromPathAsync(path);
+
+					string fileName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString()
+						+ "," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
+					StorageFile file = await postItMemoFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+				}
 			}
+		}
+		#endregion
+
+		#region [| 윈도우 위로 |]
+		public void BringWindowTop()
+		{
+			_appWindow.MoveInZOrderAtTop();
+			this.SetForegroundWindow();
 		}
 		#endregion
 
@@ -181,15 +192,15 @@ namespace MyWidget.Windows
 		{
 			try
 			{
-				if (!id.Equals(default(Guid)))
-				{
-					string path = "C:\\MyWidget";
-					string folderName = "PostItMemo";
-					StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
-					StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
+				string path = "C:\\MyWidget";
+				string folderName = "PostItMemo";
+				StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
+				StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
 
-					DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
-					FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+				DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
+				FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+				if (fileInfos.Length > 0)
+				{
 					string fileName = fileInfos[0].Name;
 
 					StorageFile file = await postItMemoFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
@@ -199,9 +210,12 @@ namespace MyWidget.Windows
 						// 파일의 원격 버전에 대한 업데이트를 방지합니다.
 						CachedFileManager.DeferUpdates(file);
 
-						fileName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString() + 
-							"," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
-						await file.RenameAsync(fileName);
+						string updateName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString()
+							+ "," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
+						if (!fileName.Equals(updateName))
+						{
+							await file.RenameAsync(updateName);
+						}
 
 						// 다른 앱이 파일의 원격 버전을 업데이트할 수 있도록
 						// 파일 변경이 완료되었음을 Windows(윈도우)에 알려줍니다.
@@ -236,7 +250,8 @@ namespace MyWidget.Windows
 		#region [| 윈도우 닫기 |]
 		private void Grid_WidgetControlClose_Tapped(object sender, RoutedEventArgs e)
 		{
-			App.memo_window.Remove(this);
+			SaveMemo();
+			App.memo_windows.Remove(this);
 			this.Close();
 		}
 		#endregion
@@ -334,8 +349,19 @@ namespace MyWidget.Windows
 		#region [| 새로운 메모 생성 |]
 		private void Grid_OpenNewMemo_Tapped(object sender, TappedRoutedEventArgs e)
 		{
-			MemoWindow memoWindow = new MemoWindow(default(Guid));
-			App.memo_window.Add(memoWindow);
+			Guid newId;
+			string path = "C:\\MyWidget";
+			string folderName = "PostItMemo";
+			DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
+			FileInfo[] fileInfos = null;
+			do
+			{
+				newId = Guid.NewGuid();
+				fileInfos = di.GetFiles("*" + newId + ".rtf");
+			} while (fileInfos.Length != 0);
+
+			MemoWindow memoWindow = new MemoWindow(newId);
+			App.memo_windows.Add(memoWindow);
 			memoWindow.ExtendsContentIntoTitleBar = true;
 			memoWindow.Activate();
 			// the bug test code follows
@@ -353,6 +379,8 @@ namespace MyWidget.Windows
 				p.SetBorderAndTitleBar(false, false);
 				p.IsResizable = false;
 			}
+
+			Ioc.Default.GetService<IMessenger>().Send(new MemoMessage(newId, true, false, false, null, string.Empty));
 		}
 		#endregion
 
@@ -399,15 +427,15 @@ namespace MyWidget.Windows
 			AniCloseColorOption.Begin();
 			AniCloseColorOption.Completed += (_, _) => { Grid_ColorOption.Visibility = Visibility.Collapsed; };
 
-			if (!id.Equals(default(Guid)))
-			{
-				string path = "C:\\MyWidget";
-				string folderName = "PostItMemo";
-				StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
-				StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
+			string path = "C:\\MyWidget";
+			string folderName = "PostItMemo";
+			StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
+			StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
 
-				DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
-				FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+			DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
+			FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+			if (fileInfos.Length > 0)
+			{
 				string fileName = fileInfos[0].Name;
 
 				StorageFile file = await postItMemoFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
@@ -417,15 +445,19 @@ namespace MyWidget.Windows
 					// 파일의 원격 버전에 대한 업데이트를 방지합니다.
 					CachedFileManager.DeferUpdates(file);
 
-					fileName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString() +
-						"," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
-					await file.RenameAsync(fileName);
+					string updateName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString()
+							+ "," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
+					if (!fileName.Equals(updateName))
+					{
+						await file.RenameAsync(updateName);
+					}
 
 					// 다른 앱이 파일의 원격 버전을 업데이트할 수 있도록
 					// 파일 변경이 완료되었음을 Windows(윈도우)에 알려줍니다.
 					FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
 				}
 			}
+			Ioc.Default.GetService<IMessenger>().Send(new MemoMessage(id, false, true, false, string.Empty, ((SolidColorBrush)Grid_Content.Background).Color.ToString()));
 		}
 		#endregion
 
@@ -545,15 +577,15 @@ namespace MyWidget.Windows
 
 			if (result == ContentDialogResult.Primary)
 			{
-				if (!id.Equals(default(Guid)))
-				{
-					string path = "C:\\MyWidget";
-					string folderName = "PostItMemo";
-					StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
-					StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
+				string path = "C:\\MyWidget";
+				string folderName = "PostItMemo";
+				StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
+				StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
 
-					DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
-					FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+				DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
+				FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+				if (fileInfos.Length > 0)
+				{
 					string fileName = fileInfos[0].Name;
 
 					StorageFile file = await postItMemoFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
@@ -562,7 +594,8 @@ namespace MyWidget.Windows
 						await file.DeleteAsync();
 					}
 				}
-				App.memo_window.Remove(this);
+				Ioc.Default.GetService<IMessenger>().Send(new MemoMessage(id, false, false, true, null, string.Empty));
+				App.memo_windows.Remove(this);
 				this.Close();
 			}
 		}
@@ -577,7 +610,7 @@ namespace MyWidget.Windows
 			{
 				keyUpTimer = new DispatcherTimer();
 				keyUpTimer.Interval = TimeSpan.FromSeconds(3);
-				keyUpTimer.Tick += SaveAfterTypingStop;
+				keyUpTimer.Tick += AfterTypingStop;
 				isTypingFirst = false;
 			}
 			else
@@ -585,11 +618,22 @@ namespace MyWidget.Windows
 				keyUpTimer.Stop();
 				keyUpTimer.Start();
 			}
+			REB_Memo.Document.GetText(TextGetOptions.FormatRtf, out string rtfText);
+			Ioc.Default.GetService<IMessenger>().Send(new MemoMessage(id, false, true, false, rtfText, string.Empty));
 		}
 
-		private async void SaveAfterTypingStop(object sender, object e)
+		private void AfterTypingStop(object sender, object e)
 		{
 			keyUpTimer.Stop();
+			SaveMemo();
+			isTypingFirst = true;
+
+		}
+		#endregion
+
+		#region [| 메모 저장 |]
+		private async void SaveMemo()
+		{
 			try
 			{
 				string path = "C:\\MyWidget";
@@ -597,54 +641,42 @@ namespace MyWidget.Windows
 				StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(path);
 				StorageFolder postItMemoFolder = await localFolder.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
 
-				string fileName = string.Empty;
-				DirectoryInfo di = new DirectoryInfo(path + "\\"+ folderName);
-				FileInfo[] fileInfos = null;
-				if (id.Equals(default(Guid)))
+				DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
+				FileInfo[] fileInfos = di.GetFiles("*" + id + ".rtf");
+				if (fileInfos.Length > 0)
 				{
-					do
+					string fileName = fileInfos[0].Name;
+
+					StorageFile file = await postItMemoFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+					if (file != null)
 					{
-						id = Guid.NewGuid();
-						fileInfos = di.GetFiles("*" + id + ".rtf");
-					} while (fileInfos.Length != 0);
-					fileName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + Convert.ToString(id) + ".rtf";
-				} else
-				{
-					fileInfos = di.GetFiles("*" + id + ".rtf");
-					fileName = fileInfos[0].Name;
-				}
+						// 변경을 완료하고 CompleteUpdateSync를 호출할 때까지
+						// 파일의 원격 버전에 대한 업데이트를 방지합니다.
+						CachedFileManager.DeferUpdates(file);
 
-				StorageFile file = await postItMemoFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
-				if (file != null)
-				{
-					// 변경을 완료하고 CompleteUpdateSync를 호출할 때까지
-					// 파일의 원격 버전에 대한 업데이트를 방지합니다.
-					CachedFileManager.DeferUpdates(file);
+						string updateName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString()
+							+ "," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
+						if (!fileName.Equals(updateName))
+						{
+							await file.RenameAsync(updateName);
+						}
 
-					fileName = _appWindow.Position.X + "," + _appWindow.Position.Y + "," + ((SolidColorBrush)Grid_Content.Background).Color.ToString()
-						+ "," + ((SolidColorBrush)Grid_TitleBar.Background).Color.ToString() + "," + Convert.ToString(id) + ".rtf";
-					await file.RenameAsync(fileName);
+						// write to file
+						using (IRandomAccessStream randAccStream =
+							await file.OpenAsync(FileAccessMode.ReadWrite))
+						{
+							REB_Memo.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
+						}
 
-					// write to file
-					using (IRandomAccessStream randAccStream =
-						await file.OpenAsync(FileAccessMode.ReadWrite))
-					{
-						REB_Memo.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
+						// 다른 앱이 파일의 원격 버전을 업데이트할 수 있도록
+						// 파일 변경이 완료되었음을 Windows(윈도우)에 알려줍니다.
+						FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
 					}
-
-					// 다른 앱이 파일의 원격 버전을 업데이트할 수 있도록
-					// 파일 변경이 완료되었음을 Windows(윈도우)에 알려줍니다.
-					FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
 				}
 			}
 			catch { }
-			finally
-			{
-				isTypingFirst = true;
-			}
 
 		}
 		#endregion
-
 	}
 }

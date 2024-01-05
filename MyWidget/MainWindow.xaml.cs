@@ -32,6 +32,12 @@ using Microsoft.UI.Input;
 using System.Reflection;
 using Windows.UI.WindowManagement;
 using Windows.Graphics;
+using Windows.Storage.Streams;
+using Windows.Storage;
+using MyWidget.Models;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Text;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -81,6 +87,20 @@ namespace MyWidget
 				this.SetForegroundWindow();
 			});
 
+			messenger.Register<MemoMessage>(this, (r, m) =>
+			{
+				if (m.IsCreate)
+				{
+					CreateMemoTemplate(Convert.ToString(m.MemoId), "#FFFFFFFF", DateTime.Now, new RichEditBox());
+				} else if (m.IsUpdate)
+				{
+					UpdateMemoTemplate(m.MemoId, m.RtfText, m.BackgroundColor);
+				} else if (m.IsDelete)
+				{
+					DeleteMemoTemplate(m.MemoId);
+				}
+			});
+
 			using (var manager = WinUIEx.WindowManager.Get(this))
 			{
 				manager.Width = 414;
@@ -112,8 +132,142 @@ namespace MyWidget
 			}
 
 			_Grid_Main_Padding = (int)Grid_Main.Padding.Top;
+
+			GetMemos();
 		}
 
+		#region [| 메모 가져오기 |]
+		private async void GetMemos()
+		{
+			string path = "C:\\MyWidget\\PostItMemo";
+			DirectoryInfo di = new DirectoryInfo(path);
+			if (di.Exists)
+			{
+				//FileInfo[] fileInfos = di.GetFiles("*.rtf").OrderByDescending(f => f.LastWriteTime).ToArray();
+				FileInfo[] fileInfos = di.GetFiles("*.rtf");
+				StorageFile file;
+				RichEditBox richEditBox = new RichEditBox();
+				foreach (FileInfo fi in fileInfos)
+				{
+					try {
+						string[] data = fi.Name.Split(',');
+						if (data.Length == 5)
+						{
+							file = await StorageFile.GetFileFromPathAsync(fi.FullName);
+							using (IRandomAccessStream randAccStream = await file.OpenAsync(FileAccessMode.Read))
+							{
+								richEditBox = new RichEditBox();
+								richEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
+
+								CreateMemoTemplate(data[4].Split(".")[0], data[2], fi.LastWriteTime, richEditBox);
+							}
+						}
+					} catch { }
+				}
+			}
+		}
+		#endregion
+
+		#region [| 메모 템플릿 생성 |]
+		private void CreateMemoTemplate(string id, string backgroundColor, DateTime lastWriteTime, RichEditBox memoRichEditBox)
+		{
+			Grid gridItemMain = new Grid();
+			gridItemMain.Name = id;
+			gridItemMain.Background = new SolidColorBrush(Common.Style.GetColor(backgroundColor));
+			gridItemMain.Tag = backgroundColor;
+			gridItemMain.BorderBrush = new SolidColorBrush(Common.Style.GetColor("#707070"));
+			gridItemMain.BorderThickness = new Thickness(1);
+			gridItemMain.MinHeight = 50;
+			gridItemMain.MaxHeight = 150;
+			gridItemMain.Margin = new Thickness(20, 10, 20, 10);
+			gridItemMain.CornerRadius = new CornerRadius(10);
+			gridItemMain.PointerEntered += Grid_Memo_PointerEntered;
+			gridItemMain.PointerExited += Grid_Memo_PointerExited;
+			gridItemMain.Tapped += GridItemMain_Tapped;
+
+			Grid gridSetting = new Grid();
+			gridSetting.Visibility = Visibility.Collapsed;
+			gridSetting.Width = 30;
+			gridSetting.Height = 30;
+			gridSetting.HorizontalAlignment = HorizontalAlignment.Right;
+			gridSetting.VerticalAlignment = VerticalAlignment.Top;
+
+			FontIcon settingIcon = new FontIcon();
+			settingIcon.Foreground = new SolidColorBrush(Common.Style.GetColor("#656565"));
+			settingIcon.Glyph = "\uE712";
+			settingIcon.FontSize = 18;
+
+			Grid gridCreateDate = new Grid();
+			gridCreateDate.Visibility = Visibility.Visible;
+			gridCreateDate.Height = 30;
+			gridCreateDate.Margin = new Thickness(0,0,10,0);
+			gridCreateDate.HorizontalAlignment = HorizontalAlignment.Right;
+			gridCreateDate.VerticalAlignment = VerticalAlignment.Top;
+
+			TextBlock updateDate = new TextBlock();
+			updateDate.TextWrapping = TextWrapping.Wrap;
+			updateDate.FontFamily = new FontFamily("DOCK11");
+			updateDate.TextAlignment = TextAlignment.Center;
+			updateDate.Foreground = new SolidColorBrush(Common.Style.GetColor("#656565"));
+			updateDate.VerticalAlignment = VerticalAlignment.Center;
+			updateDate.Padding = new Thickness(0);
+			updateDate.Text = lastWriteTime.ToString("yyyy-MM-dd");
+
+			memoRichEditBox.Margin = new Thickness(0, 30, 10, 0);
+			memoRichEditBox.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+			memoRichEditBox.BorderBrush = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+			memoRichEditBox.BorderThickness = new Thickness(0);
+			memoRichEditBox.PlaceholderText = "메모를 작성하세요...";
+			memoRichEditBox.Resources["TextControlBackgroundPointerOver"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+			memoRichEditBox.Resources["TextControlBackgroundFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+			memoRichEditBox.Resources["TextControlBorderBrushFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
+
+			gridSetting.Children.Add(settingIcon);
+			gridCreateDate.Children.Add(updateDate);
+
+			gridItemMain.Children.Add(gridSetting);
+			gridItemMain.Children.Add(gridCreateDate);
+			gridItemMain.Children.Add(memoRichEditBox);
+
+			//SP_MemoList.Children.Add(gridItemMain);
+			SP_MemoList.Children.Insert(0, gridItemMain);
+		}
+		#endregion
+
+		#region [| 메모 클릭시 앞으로 가져오기 |]
+		private void GridItemMain_Tapped(object sender, TappedRoutedEventArgs e)
+		{
+			Grid memo = sender as Grid;
+			string memoId = Convert.ToString(memo.Name);
+			App.memo_windows.Find(m => memoId.Equals(Convert.ToString(m.id))).BringWindowTop();
+		}
+		#endregion
+
+		#region [| 메모 템플릿 업데이트 |]
+		private void UpdateMemoTemplate(Guid id, string rtfText, string backgroundColor)
+		{
+			Grid targetMemo = SP_MemoList.Children.OfType<Grid>().ToList().Find(g => g.Name.Equals(Convert.ToString(id)));
+			if (!rtfText.Equals(string.Empty))
+			{
+				// IsReadOnly 가 true면 엑세스 거부당해서 텍스트 변경 안됨
+				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().IsReadOnly = false;
+				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().Document.SetText(TextSetOptions.FormatRtf, rtfText);
+				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().IsReadOnly = true;
+			}
+			if (!backgroundColor.Equals(string.Empty))
+			{
+				targetMemo.Background = new SolidColorBrush(Common.Style.GetColor(backgroundColor));
+			}
+		}
+		#endregion
+
+		#region [| 메모 템플릿 삭제 |]
+		private void DeleteMemoTemplate(Guid id)
+		{
+			Grid targetMemo = SP_MemoList.Children.OfType<Grid>().ToList().Find(g => g.Name.Equals(Convert.ToString(id)));
+			SP_MemoList.Children.Remove(targetMemo);
+		}
+		#endregion
 
 		#region [| 윈도우 이동 |]
 		private void Grid_TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -365,13 +519,40 @@ namespace MyWidget
 			_grid = sender as Grid;
 			_grid.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 		}
+
+		private void Grid_Memo_PointerEntered(object sender, PointerRoutedEventArgs e)
+		{
+			_grid = sender as Grid;
+			_grid.Children.OfType<Grid>().FirstOrDefault().Visibility = Visibility.Visible;
+			_grid.Children.OfType<Grid>().LastOrDefault().Visibility = Visibility.Collapsed;
+			_grid.Background = new SolidColorBrush(Common.Style.GetColorDarkly(((SolidColorBrush)_grid.Background).Color, 0.05f));
+		}
+
+		private void Grid_Memo_PointerExited(object sender, PointerRoutedEventArgs e)
+		{
+			_grid = sender as Grid;
+			_grid.Children.OfType<Grid>().FirstOrDefault().Visibility = Visibility.Collapsed;
+			_grid.Children.OfType<Grid>().LastOrDefault().Visibility = Visibility.Visible;
+			_grid.Background = new SolidColorBrush(Common.Style.GetColor(Convert.ToString(_grid.Tag)));
+		}
 		#endregion
 
 		#region [| 메모 위젯 추가 |]
 		private void Grid_NewMemo_Tapped(object sender, TappedRoutedEventArgs e)
 		{
-			MemoWindow memoWindow = new MemoWindow(default(Guid));
-			App.memo_window.Add(memoWindow);
+			Guid newId;
+			string path = "C:\\MyWidget";
+			string folderName = "PostItMemo";
+			DirectoryInfo di = new DirectoryInfo(path + "\\" + folderName);
+			FileInfo[] fileInfos = null;
+			do
+			{
+				newId = Guid.NewGuid();
+				fileInfos = di.GetFiles("*" + newId + ".rtf");
+			} while (fileInfos.Length != 0);
+
+			MemoWindow memoWindow = new MemoWindow(newId);
+			App.memo_windows.Add(memoWindow);
 			memoWindow.ExtendsContentIntoTitleBar = true;
 			memoWindow.Activate();
 			// the bug test code follows
@@ -389,6 +570,7 @@ namespace MyWidget
 				p.SetBorderAndTitleBar(false, false);
 				p.IsResizable = false;
 			}
+			CreateMemoTemplate(Convert.ToString(newId), "#FFFFFFFF", DateTime.Now, new RichEditBox());
 		}
 		#endregion
 

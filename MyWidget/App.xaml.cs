@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using Microsoft.Windows.AppLifecycle;
 using MyWidget.Helpers;
+using MyWidget.Models;
 using MyWidget.Windows;
 using System;
 using System.Collections.Generic;
@@ -121,7 +122,7 @@ namespace MyWidget
 					{
 						guid = file.Name.Split('.')[0].Split(",")[4];
 						memoWindow = new MemoWindow(new Guid(guid));
-						memo_window.Add(memoWindow);
+						memo_windows.Add(memoWindow);
 						memoWindow.ExtendsContentIntoTitleBar = true;
 						memoWindow.Activate();
 						// the bug test code follows
@@ -183,6 +184,8 @@ namespace MyWidget
 
 		public static Window m_window { get; set; }
 
-		public static List<Window> memo_window = new List<Window>();
+		public static List<MemoWindow> memo_windows = new List<MemoWindow>();
+
+		public static List<Memo> memos = new List<Memo>();
 	}
 }
