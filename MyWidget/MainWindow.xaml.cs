@@ -217,6 +217,8 @@ namespace MyWidget
 			memoRichEditBox.Background = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.BorderBrush = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.BorderThickness = new Thickness(0);
+			memoRichEditBox.IsReadOnly = true;
+			memoRichEditBox.IsRightTapEnabled = true;
 			memoRichEditBox.PlaceholderText = "메모를 작성하세요...";
 			memoRichEditBox.Resources["TextControlBackgroundPointerOver"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.Resources["TextControlBackgroundFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
