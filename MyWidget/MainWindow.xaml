@@ -58,7 +58,24 @@
                 <RowDefinition Height="70"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" Background="Aqua" Margin="20"></Grid>
+            <Grid x:Name="Grid_Search" Grid.Row="0" Margin="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="TBox_SearchText" Grid.Column="0" KeyUp="TBox_SearchText_KeyUp" TextChanged="TBox_SearchText_TextChanged"
+                         PlaceholderText="검색어를 입력해 주세요." Background="Transparent" BorderBrush="Transparent" BorderThickness="0">
+                    <TextBox.Resources>
+                        <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent"/>
+                        <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent"/>
+                        <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent"/>
+                    </TextBox.Resources>
+                </TextBox>
+                <Grid Grid.Column="1" Margin="0" Background="Transparent"
+                      PointerEntered="Grid_PointerEntered" PointerExited="Grid_PointerExited">
+                    <FontIcon Foreground="#656565"  Glyph="&#xE721;" FontSize="15"/>
+                </Grid>
+            </Grid>
             <ScrollView Grid.Row="1">
                 <StackPanel x:Name="SP_MemoList" Orientation="Vertical">
                 </StackPanel>

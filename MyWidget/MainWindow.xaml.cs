@@ -38,6 +38,7 @@ using MyWidget.Models;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -129,6 +130,7 @@ namespace MyWidget
 			if (Grid_Content.Background is SolidColorBrush sb)
 			{
 				Grid_TitleBar.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
+				Grid_Search.Background = new SolidColorBrush(Common.Style.GetColorDarkly(sb.Color, 0.1f));
 			}
 
 			_Grid_Main_Padding = (int)Grid_Main.Padding.Top;
@@ -159,7 +161,7 @@ namespace MyWidget
 								richEditBox = new RichEditBox();
 								richEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
 
-								CreateMemoTemplate(data[4].Split(".")[0], data[2], fi.LastWriteTime, richEditBox);
+								CreateMemoTemplate(data[4].Split(".")[0], data[2], fi.CreationTime, richEditBox);
 							}
 						}
 					} catch { }
@@ -223,10 +225,12 @@ namespace MyWidget
 			memoRichEditBox.Resources["TextControlBackgroundPointerOver"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.Resources["TextControlBackgroundFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
 			memoRichEditBox.Resources["TextControlBorderBrushFocused"] = new SolidColorBrush(Common.Style.GetColor("#00000000"));
-            memoRichEditBox.GettingFocus += MemoRichEditBox_GettingFocus;
+			memoRichEditBox.AddHandler(RichEditBox.PointerReleasedEvent, new PointerEventHandler(MemoRichEditBox_PointerPressed), true);
+			//memoRichEditBox.PointerPressed += MemoRichEditBox_PointerPressed;
 
 
-            gridSetting.Children.Add(settingIcon);
+
+			gridSetting.Children.Add(settingIcon);
 			gridCreateDate.Children.Add(updateDate);
 
 			gridItemMain.Children.Add(gridSetting);
@@ -236,16 +240,18 @@ namespace MyWidget
 			//SP_MemoList.Children.Add(gridItemMain);
 			SP_MemoList.Children.Insert(0, gridItemMain);
 		}
-        #endregion
+		#endregion
 
-        #region [| 메모 클릭시 메모장 앞으로 가져오기 |]
-        private void MemoRichEditBox_GettingFocus(UIElement sender, GettingFocusEventArgs args)
-        {
-            RichEditBox richEditBox = sender as RichEditBox;
-			Grid memo = richEditBox.Parent as Grid;
-            string memoId = Convert.ToString(memo.Name);
-            App.memo_windows.Find(m => memoId.Equals(Convert.ToString(m.id))).BringWindowTop();
-        }
+		#region [| 메모 클릭시 메모장 앞으로 가져오기 |]
+		private void MemoRichEditBox_PointerPressed(object sender, PointerRoutedEventArgs e)
+		{
+			if (sender is RichEditBox richEditBox)
+			{
+				Grid memo = richEditBox.Parent as Grid;
+				string memoId = Convert.ToString(memo.Name);
+				App.memo_windows.Find(m => memoId.Equals(Convert.ToString(m.id))).BringWindowTop();
+			}
+		}
 
         private void GridItemMain_Tapped(object sender, TappedRoutedEventArgs e)
 		{
@@ -263,7 +269,7 @@ namespace MyWidget
 			{
 				// IsReadOnly 가 true면 엑세스 거부당해서 텍스트 변경 안됨
 				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().IsReadOnly = false;
-				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().Document.SetText(TextSetOptions.FormatRtf, rtfText);
+				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().Document.SetText(TextSetOptions.FormatRtf, rtfText.Substring(0, rtfText.Length - 10) + "}"); // 마지막 엔터 제거
 				targetMemo.Children.OfType<RichEditBox>().FirstOrDefault().IsReadOnly = true;
 			}
 			if (!backgroundColor.Equals(string.Empty))
@@ -547,6 +553,39 @@ namespace MyWidget
 			_grid.Children.OfType<Grid>().FirstOrDefault().Visibility = Visibility.Collapsed;
 			_grid.Children.OfType<Grid>().LastOrDefault().Visibility = Visibility.Visible;
 			_grid.Background = new SolidColorBrush(Common.Style.GetColor(Convert.ToString(_grid.Tag)));
+		}
+
+		#endregion
+
+		#region [| 메모장 검색 |]
+		private void TBox_SearchText_KeyUp(object sender, KeyRoutedEventArgs e)
+		{
+			string text = string.Empty;
+			RichEditBox richEditBox;
+			foreach (Grid item in SP_MemoList.Children.OfType<Grid>().ToList())
+			{
+				richEditBox = item.Children.OfType<RichEditBox>().FirstOrDefault();
+				richEditBox.Document.GetText(TextGetOptions.None, out text);
+				if (!TBox_SearchText.Text.Equals(string.Empty) && text.IndexOf(TBox_SearchText.Text) == -1)
+				{
+					item.Visibility = Visibility.Collapsed;
+				}
+				else
+				{
+					item.Visibility = Visibility.Visible;
+				}
+			}
+		}
+
+		private void TBox_SearchText_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (TBox_SearchText.Text.Length == 0)
+			{
+				foreach (Grid item in SP_MemoList.Children.OfType<Grid>().ToList())
+				{
+					item.Visibility = Visibility.Visible;
+				}
+			}
 		}
 		#endregion
 
